@@ -29,6 +29,7 @@ import com.yahoo.ycsb.generator.SkewedLatestGenerator;
 import com.yahoo.ycsb.generator.UniformIntegerGenerator;
 import com.yahoo.ycsb.generator.ZipfianGenerator;
 import com.yahoo.ycsb.measurements.Measurements;
+import com.yahoo.ycsb.memcached.Memcached;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,7 +70,81 @@ import java.util.Vector;
  * ("ordered"), or in hashed order ("hashed") (default: hashed)
  * </ul>
  */
-public class CoreWorkload extends Workload {
+public class MemcachedCoreWorkload extends Workload {
+	
+	// The prefix to be added to each key.
+	public static final String KEY_PREFIX_PROPERTY = "keyprefix";
+	public static final String KEY_PREFIX_PROPERTY_DEFAULT = "user";
+	public static String keyprefix;
+
+	// The name of the property for the proportion of transactions that are adds.
+	public static final String ADD_PROPORTION_PROPERTY = "memaddproportion";
+	public static final String ADD_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double addproportion;
+	
+	// The name of the property for the proportion of transactions that are appends.
+	public static final String APPEND_PROPORTION_PROPERTY = "memappendproportion";
+	public static final String APPEND_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double appendproportion;
+	
+	// The name of the property for the proportion of transactions that are cas.
+	public static final String CAS_PROPORTION_PROPERTY = "memcasproportion";
+	public static final String CAS_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double casproportion;
+	
+	// The name of the property for the proportion of transactions that are decrs.
+	public static final String DECR_PROPORTION_PROPERTY = "memdecrproportion";
+	public static final String DECR_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double decrproportion;
+	
+	// The name of the property for the proportion of transactions that are decrs.
+	public static final String DELETE_PROPORTION_PROPERTY = "memdeleteproportion";
+	public static final String DELETE_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double deleteproportion;
+	
+	// The name of the property for the proportion of transactions that are gets.
+	public static final String GET_PROPORTION_PROPERTY = "memgetproportion";
+	public static final String GET_PROPORTION_PROPERTY_DEFAULT = "0.95";
+	double getproportion;
+	
+	// The name of the property for the proportion of transactions that are gets's.
+	public static final String GETS_PROPORTION_PROPERTY = "memgetsproportion";
+	public static final String GETS_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double getsproportion;
+	
+	// The name of the property for the proportion of transactions that are incrs.
+	public static final String INCR_PROPORTION_PROPERTY = "memincrproportion";
+	public static final String INCR_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double incrproportion;
+	
+	// The name of the property for the proportion of transactions that are prepends.
+	public static final String PREPEND_PROPORTION_PROPERTY = "memprependproportion";
+	public static final String PREPEND_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double prependproportion;
+	
+	// The name of the property for the proportion of transactions that are replaces.
+	public static final String REPLACE_PROPORTION_PROPERTY = "memreplaceproportion";
+	public static final String REPLACE_PROPORTION_PROPERTY_DEFAULT = "0.0";
+	double replaceproportion;
+	
+	// The name of the property for the proportion of transactions that are sets.
+	public static final String SET_PROPORTION_PROPERTY = "memsetproportion";
+	public static final String SET_PROPORTION_PROPERTY_DEFAULT = "0.05";
+	double setproportion;
+	
+	// The length of the value to store with a key
+	public static final String VALUE_LENGTH_PROPERTY = "valuelength";
+	public static final String VALUE_LENGTH_PROPERTY_DEFAULT = "256";
+	int valuelength;
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	/**
 	 * The name of the database table to run queries against.
@@ -96,18 +171,6 @@ public class CoreWorkload extends Workload {
 	int fieldcount;
 
 	/**
-	 * The name of the property for the length of a field in bytes.
-	 */
-	public static final String FIELD_LENGTH_PROPERTY = "fieldlength";
-
-	/**
-	 * The default length of a field in bytes.
-	 */
-	public static final String FIELD_LENGTH_PROPERTY_DEFAULT = "100";
-
-	int fieldlength;
-
-	/**
 	 * The name of the property for deciding whether to read one field (false)
 	 * or all fields (true) of a record.
 	 */
@@ -132,61 +195,6 @@ public class CoreWorkload extends Workload {
 	public static final String WRITE_ALL_FIELDS_PROPERTY_DEFAULT = "false";
 
 	boolean writeallfields;
-
-	/**
-	 * The name of the property for the proportion of transactions that are
-	 * reads.
-	 */
-	public static final String READ_PROPORTION_PROPERTY = "readproportion";
-
-	/**
-	 * The default proportion of transactions that are reads.
-	 */
-	public static final String READ_PROPORTION_PROPERTY_DEFAULT = "0.95";
-
-	/**
-	 * The name of the property for the proportion of transactions that are
-	 * updates.
-	 */
-	public static final String UPDATE_PROPORTION_PROPERTY = "updateproportion";
-
-	/**
-	 * The default proportion of transactions that are updates.
-	 */
-	public static final String UPDATE_PROPORTION_PROPERTY_DEFAULT = "0.05";
-
-	/**
-	 * The name of the property for the proportion of transactions that are
-	 * inserts.
-	 */
-	public static final String INSERT_PROPORTION_PROPERTY = "insertproportion";
-
-	/**
-	 * The default proportion of transactions that are inserts.
-	 */
-	public static final String INSERT_PROPORTION_PROPERTY_DEFAULT = "0.0";
-
-	/**
-	 * The name of the property for the proportion of transactions that are
-	 * scans.
-	 */
-	public static final String SCAN_PROPORTION_PROPERTY = "scanproportion";
-
-	/**
-	 * The default proportion of transactions that are scans.
-	 */
-	public static final String SCAN_PROPORTION_PROPERTY_DEFAULT = "0.0";
-
-	/**
-	 * The name of the property for the proportion of transactions that are
-	 * read-modify-write.
-	 */
-	public static final String READMODIFYWRITE_PROPORTION_PROPERTY = "readmodifywriteproportion";
-
-	/**
-	 * The default proportion of transactions that are scans.
-	 */
-	public static final String READMODIFYWRITE_PROPORTION_PROPERTY_DEFAULT = "0.0";
 
 	/**
 	 * The name of the property for the the distribution of requests across the
@@ -253,40 +261,18 @@ public class CoreWorkload extends Workload {
 	 */
 	public void init(Properties p) throws WorkloadException {
 		table = p.getProperty(TABLENAME_PROPERTY, TABLENAME_PROPERTY_DEFAULT);
-		fieldcount = Integer.parseInt(p.getProperty(FIELD_COUNT_PROPERTY,
-				FIELD_COUNT_PROPERTY_DEFAULT));
-		fieldlength = Integer.parseInt(p.getProperty(FIELD_LENGTH_PROPERTY,
-				FIELD_LENGTH_PROPERTY_DEFAULT));
-		double readproportion = Double.parseDouble(p.getProperty(
-				READ_PROPORTION_PROPERTY, READ_PROPORTION_PROPERTY_DEFAULT));
-		double updateproportion = Double
-				.parseDouble(p.getProperty(UPDATE_PROPORTION_PROPERTY,
-						UPDATE_PROPORTION_PROPERTY_DEFAULT));
-		double insertproportion = Double
-				.parseDouble(p.getProperty(INSERT_PROPORTION_PROPERTY,
-						INSERT_PROPORTION_PROPERTY_DEFAULT));
-		double scanproportion = Double.parseDouble(p.getProperty(
-				SCAN_PROPORTION_PROPERTY, SCAN_PROPORTION_PROPERTY_DEFAULT));
-		double readmodifywriteproportion = Double.parseDouble(p.getProperty(
-				READMODIFYWRITE_PROPORTION_PROPERTY,
-				READMODIFYWRITE_PROPORTION_PROPERTY_DEFAULT));
-		recordcount = Integer.parseInt(p
-				.getProperty(Client.RECORD_COUNT_PROPERTY));
-		String requestdistrib = p.getProperty(REQUEST_DISTRIBUTION_PROPERTY,
-				REQUEST_DISTRIBUTION_PROPERTY_DEFAULT);
-		int maxscanlength = Integer.parseInt(p.getProperty(
-				MAX_SCAN_LENGTH_PROPERTY, MAX_SCAN_LENGTH_PROPERTY_DEFAULT));
-		String scanlengthdistrib = p.getProperty(
-				SCAN_LENGTH_DISTRIBUTION_PROPERTY,
-				SCAN_LENGTH_DISTRIBUTION_PROPERTY_DEFAULT);
-
-		int insertstart = Integer.parseInt(p.getProperty(INSERT_START_PROPERTY,
-				INSERT_START_PROPERTY_DEFAULT));
-
-		readallfields = Boolean.parseBoolean(p.getProperty(
-				READ_ALL_FIELDS_PROPERTY, READ_ALL_FIELDS_PROPERTY_DEFAULT));
-		writeallfields = Boolean.parseBoolean(p.getProperty(
-				WRITE_ALL_FIELDS_PROPERTY, WRITE_ALL_FIELDS_PROPERTY_DEFAULT));
+		fieldcount = Integer.parseInt(p.getProperty(FIELD_COUNT_PROPERTY, FIELD_COUNT_PROPERTY_DEFAULT));
+		valuelength = Integer.parseInt(p.getProperty(VALUE_LENGTH_PROPERTY, VALUE_LENGTH_PROPERTY_DEFAULT));
+		double getproportion = Double.parseDouble(p.getProperty(GET_PROPORTION_PROPERTY, GET_PROPORTION_PROPERTY_DEFAULT));
+		double setproportion = Double.parseDouble(p.getProperty(SET_PROPORTION_PROPERTY, SET_PROPORTION_PROPERTY_DEFAULT));
+		recordcount = Integer.parseInt(p.getProperty(Client.RECORD_COUNT_PROPERTY));
+		String requestdistrib = p.getProperty(REQUEST_DISTRIBUTION_PROPERTY, REQUEST_DISTRIBUTION_PROPERTY_DEFAULT);
+		int maxscanlength = Integer.parseInt(p.getProperty( MAX_SCAN_LENGTH_PROPERTY, MAX_SCAN_LENGTH_PROPERTY_DEFAULT));
+		String scanlengthdistrib = p.getProperty(SCAN_LENGTH_DISTRIBUTION_PROPERTY, SCAN_LENGTH_DISTRIBUTION_PROPERTY_DEFAULT);
+		int insertstart = Integer.parseInt(p.getProperty(INSERT_START_PROPERTY, INSERT_START_PROPERTY_DEFAULT));
+		keyprefix = p.getProperty(KEY_PREFIX_PROPERTY, KEY_PREFIX_PROPERTY_DEFAULT);
+		readallfields = Boolean.parseBoolean(p.getProperty(READ_ALL_FIELDS_PROPERTY, READ_ALL_FIELDS_PROPERTY_DEFAULT));
+		writeallfields = Boolean.parseBoolean(p.getProperty(WRITE_ALL_FIELDS_PROPERTY, WRITE_ALL_FIELDS_PROPERTY_DEFAULT));
 
 		if (p.getProperty(INSERT_ORDER_PROPERTY, INSERT_ORDER_PROPERTY_DEFAULT)
 				.compareTo("hashed") == 0) {
@@ -297,26 +283,15 @@ public class CoreWorkload extends Workload {
 
 		keysequence = new CounterGenerator(insertstart);
 		operationchooser = new DiscreteGenerator();
-		if (readproportion > 0) {
-			operationchooser.addValue(readproportion, "READ");
+		if (getproportion > 0) {
+			operationchooser.addValue(getproportion, "GET");
 		}
-
-		if (updateproportion > 0) {
-			operationchooser.addValue(updateproportion, "UPDATE");
+		
+		if (setproportion > 0) {
+			operationchooser.addValue(setproportion, "SET");
 		}
-
-		if (insertproportion > 0) {
-			operationchooser.addValue(insertproportion, "INSERT");
-		}
-
-		if (scanproportion > 0) {
-			operationchooser.addValue(scanproportion, "SCAN");
-		}
-
-		if (readmodifywriteproportion > 0) {
-			operationchooser.addValue(readmodifywriteproportion,
-					"READMODIFYWRITE");
-		}
+		
+		
 
 		transactioninsertkeysequence = new CounterGenerator(recordcount);
 		if (requestdistrib.compareTo("uniform") == 0) {
@@ -338,7 +313,7 @@ public class CoreWorkload extends Workload {
 
 			int opcount = Integer.parseInt(p
 					.getProperty(Client.OPERATION_COUNT_PROPERTY));
-			int expectednewkeys = (int) (((double) opcount) * insertproportion * 2.0); // 2
+			int expectednewkeys = (int) (((double) opcount) * setproportion * 2.0); // 2
 																						// is
 																						// fudge
 																						// factor
@@ -371,19 +346,15 @@ public class CoreWorkload extends Workload {
 	 * it will be difficult to reach the target throughput. Ideally, this
 	 * function would have no side effects other than DB operations.
 	 */
-	public boolean doInsert(DataStore db, Object threadstate) {
+	public boolean doInsert(DataStore memcached, Object threadstate) {
 		int keynum = keysequence.nextInt();
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String dbkey = "user" + keynum;
-		HashMap<String, String> values = new HashMap<String, String>();
-		for (int i = 0; i < fieldcount; i++) {
-			String fieldkey = "field" + i;
-			String data = Utils.ASCIIString(fieldlength);
-			values.put(fieldkey, data);
-		}
-		if (((DB)db).insert(table, dbkey, values) == 0)
+		String dbkey = keyprefix + keynum;
+		String value = Utils.ASCIIString(valuelength);
+		
+		if (((Memcached)memcached).set(dbkey, value) == 0)
 			return true;
 		else
 			return false;
@@ -396,25 +367,19 @@ public class CoreWorkload extends Workload {
 	 * it will be difficult to reach the target throughput. Ideally, this
 	 * function would have no side effects other than DB operations.
 	 */
-	public boolean doTransaction(DataStore db, Object threadstate) {
+	public boolean doTransaction(DataStore memcached, Object threadstate) {
 		String op = operationchooser.nextString();
 
-		if (op.compareTo("READ") == 0) {
-			doTransactionRead((DB)db);
-		} else if (op.compareTo("UPDATE") == 0) {
-			doTransactionUpdate((DB)db);
-		} else if (op.compareTo("INSERT") == 0) {
-			doTransactionInsert((DB)db);
-		} else if (op.compareTo("SCAN") == 0) {
-			doTransactionScan((DB)db);
-		} else {
-			doTransactionReadModifyWrite((DB)db);
+		if (op.compareTo("GET") == 0) {
+			doTransactionGet((Memcached)memcached);
+		} else if (op.compareTo("SET") == 0) {
+			doTransactionSet((Memcached)memcached);
 		}
 
 		return true;
 	}
 
-	public void doTransactionRead(DB db) {
+	public void doTransactionGet(Memcached memcached) {
 		// choose a random key
 		int keynum;
 		do {
@@ -426,145 +391,17 @@ public class CoreWorkload extends Workload {
 		}
 		String keyname = "user" + keynum;
 
-		HashSet<String> fields = null;
-
-		if (!readallfields) {
-			// read a random field
-			String fieldname = "field" + fieldchooser.nextString();
-
-			fields = new HashSet<String>();
-			fields.add(fieldname);
-		}
-
-		db.read(table, keyname, fields, new HashMap<String, String>());
+		memcached.get(keyname, null);
 	}
-
-	public void doTransactionReadModifyWrite(DB db) {
-		// choose a random key
-		int keynum;
-		do {
-			keynum = keychooser.nextInt();
-		} while (keynum > transactioninsertkeysequence.lastInt());
-
-		if (!orderedinserts) {
-			keynum = Utils.hash(keynum);
-		}
-		String keyname = "user" + keynum;
-
-		HashSet<String> fields = null;
-
-		if (!readallfields) {
-			// read a random field
-			String fieldname = "field" + fieldchooser.nextString();
-
-			fields = new HashSet<String>();
-			fields.add(fieldname);
-		}
-
-		HashMap<String, String> values = new HashMap<String, String>();
-
-		if (writeallfields) {
-			// new data for all the fields
-			for (int i = 0; i < fieldcount; i++) {
-				String fieldname = "field" + i;
-				String data = Utils.ASCIIString(fieldlength);
-				values.put(fieldname, data);
-			}
-		} else {
-			// update a random field
-			String fieldname = "field" + fieldchooser.nextString();
-			String data = Utils.ASCIIString(fieldlength);
-			values.put(fieldname, data);
-		}
-
-		// do the transaction
-
-		long st = System.currentTimeMillis();
-
-		db.read(table, keyname, fields, new HashMap<String, String>());
-
-		db.update(table, keyname, values);
-
-		long en = System.currentTimeMillis();
-
-		Measurements.getMeasurements().measure("READ-MODIFY-WRITE",
-				(int) (en - st));
-	}
-
-	public void doTransactionScan(DB db) {
-		// choose a random key
-		int keynum;
-		do {
-			keynum = keychooser.nextInt();
-		} while (keynum > transactioninsertkeysequence.lastInt());
-
-		if (!orderedinserts) {
-			keynum = Utils.hash(keynum);
-		}
-		String startkeyname = "user" + keynum;
-
-		// choose a random scan length
-		int len = scanlength.nextInt();
-
-		HashSet<String> fields = null;
-
-		if (!readallfields) {
-			// read a random field
-			String fieldname = "field" + fieldchooser.nextString();
-
-			fields = new HashSet<String>();
-			fields.add(fieldname);
-		}
-
-		db.scan(table, startkeyname, len, fields,
-				new Vector<HashMap<String, String>>());
-	}
-
-	public void doTransactionUpdate(DB db) {
-		// choose a random key
-		int keynum;
-		do {
-			keynum = keychooser.nextInt();
-		} while (keynum > transactioninsertkeysequence.lastInt());
-
-		if (!orderedinserts) {
-			keynum = Utils.hash(keynum);
-		}
-		String keyname = "user" + keynum;
-
-		HashMap<String, String> values = new HashMap<String, String>();
-
-		if (writeallfields) {
-			// new data for all the fields
-			for (int i = 0; i < fieldcount; i++) {
-				String fieldname = "field" + i;
-				String data = Utils.ASCIIString(fieldlength);
-				values.put(fieldname, data);
-			}
-		} else {
-			// update a random field
-			String fieldname = "field" + fieldchooser.nextString();
-			String data = Utils.ASCIIString(fieldlength);
-			values.put(fieldname, data);
-		}
-
-		db.update(table, keyname, values);
-	}
-
-	public void doTransactionInsert(DB db) {
+	
+	public void doTransactionSet(Memcached memcached) {
 		// choose the next key
 		int keynum = transactioninsertkeysequence.nextInt();
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String dbkey = "user" + keynum;
-
-		HashMap<String, String> values = new HashMap<String, String>();
-		for (int i = 0; i < fieldcount; i++) {
-			String fieldkey = "field" + i;
-			String data = Utils.ASCIIString(fieldlength);
-			values.put(fieldkey, data);
-		}
-		db.insert(table, dbkey, values);
+		String dbkey = keyprefix + keynum;
+		String value = Utils.ASCIIString(valuelength);
+		memcached.set(dbkey, value);
 	}
 }

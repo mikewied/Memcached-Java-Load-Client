@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Vector;
 
+import com.yahoo.ycsb.database.DB;
 import com.yahoo.ycsb.workloads.*;
 
 /**
@@ -186,7 +187,7 @@ public class CommandLine {
 		db.setProperties(props);
 		try {
 			db.init();
-		} catch (DBException e) {
+		} catch (DataStoreException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}

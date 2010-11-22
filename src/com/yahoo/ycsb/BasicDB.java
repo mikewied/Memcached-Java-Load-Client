@@ -24,6 +24,8 @@ import java.util.Enumeration;
 import java.util.Random;
 import java.util.Vector;
 
+import com.yahoo.ycsb.database.DB;
+
 /**
  * Basic DB that just prints out the requested operations, instead of doing them
  * against a database.

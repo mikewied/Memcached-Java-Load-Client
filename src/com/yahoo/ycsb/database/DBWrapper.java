@@ -15,13 +15,14 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.database;
 
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
+import com.yahoo.ycsb.DataStoreException;
 import com.yahoo.ycsb.measurements.Measurements;
 
 /**
@@ -54,7 +55,7 @@ public class DBWrapper extends DB {
 	 * Initialize any state for this DB. Called once per DB instance; there is
 	 * one DB instance per client thread.
 	 */
-	public void init() throws DBException {
+	public void init() throws DataStoreException {
 		_db.init();
 	}
 
@@ -62,7 +63,7 @@ public class DBWrapper extends DB {
 	 * Cleanup any state for this DB. Called once per DB instance; there is one
 	 * DB instance per client thread.
 	 */
-	public void cleanup() throws DBException {
+	public void cleanup() throws DataStoreException {
 		_db.cleanup();
 	}
 
@@ -82,10 +83,10 @@ public class DBWrapper extends DB {
 	 */
 	public int read(String table, String key, Set<String> fields,
 			HashMap<String, String> result) {
-		long st = System.currentTimeMillis();
+		long st = System.nanoTime();
 		int res = _db.read(table, key, fields, result);
-		long en = System.currentTimeMillis();
-		_measurements.measure("READ", (int) (en - st));
+		long en = System.nanoTime();
+		_measurements.measure("READ", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("READ", res);
 		return res;
 	}
@@ -109,10 +110,10 @@ public class DBWrapper extends DB {
 	 */
 	public int scan(String table, String startkey, int recordcount,
 			Set<String> fields, Vector<HashMap<String, String>> result) {
-		long st = System.currentTimeMillis();
+		long st = System.nanoTime();
 		int res = _db.scan(table, startkey, recordcount, fields, result);
-		long en = System.currentTimeMillis();
-		_measurements.measure("SCAN", (int) (en - st));
+		long en = System.nanoTime();
+		_measurements.measure("SCAN", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("SCAN", res);
 		return res;
 	}
@@ -131,10 +132,10 @@ public class DBWrapper extends DB {
 	 * @return Zero on success, a non-zero error code on error
 	 */
 	public int update(String table, String key, HashMap<String, String> values) {
-		long st = System.currentTimeMillis();
+		long st = System.nanoTime();
 		int res = _db.update(table, key, values);
-		long en = System.currentTimeMillis();
-		_measurements.measure("UPDATE", (int) (en - st));
+		long en = System.nanoTime();
+		_measurements.measure("UPDATE", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("UPDATE", res);
 		return res;
 	}
@@ -153,10 +154,10 @@ public class DBWrapper extends DB {
 	 * @return Zero on success, a non-zero error code on error
 	 */
 	public int insert(String table, String key, HashMap<String, String> values) {
-		long st = System.currentTimeMillis();
+		long st = System.nanoTime();
 		int res = _db.insert(table, key, values);
-		long en = System.currentTimeMillis();
-		_measurements.measure("INSERT", (int) (en - st));
+		long en = System.nanoTime();
+		_measurements.measure("INSERT", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("INSERT", res);
 		return res;
 	}
@@ -171,10 +172,10 @@ public class DBWrapper extends DB {
 	 * @return Zero on success, a non-zero error code on error
 	 */
 	public int delete(String table, String key) {
-		long st = System.currentTimeMillis();
+		long st = System.nanoTime();
 		int res = _db.delete(table, key);
-		long en = System.currentTimeMillis();
-		_measurements.measure("DELETE", (int) (en - st));
+		long en = System.nanoTime();
+		_measurements.measure("DELETE", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("DELETE", res);
 		return res;
 	}

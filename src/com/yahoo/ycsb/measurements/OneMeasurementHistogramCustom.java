@@ -18,129 +18,135 @@
 package com.yahoo.ycsb.measurements;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Properties;
 
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 /**
- * Collects latency measurements, and reports them when requested.
+ * Take measurements and maintain a histogram of a given metric, such as READ
+ * LATENCY.
  * 
  * @author cooperb
  * 
  */
-public class Measurements {
-	private static final String MEASUREMENT_TYPE = "measurementtype";
+public class OneMeasurementHistogramCustom extends OneMeasurement {
+	public static final int BUCKETS = 40;
 
-	private static final String MEASUREMENT_TYPE_DEFAULT = "histogram";
+	int[] histogram;
+	int histogramoverflow;
+	int operations;
+	long totallatency;
 
-	static Measurements singleton = null;
+	// keep a windowed version of these stats for printing status
+	int windowoperations;
+	long windowtotallatency;
 
-	static Properties measurementproperties = null;
+	int min;
+	int max;
+	HashMap<Integer, int[]> returncodes;
 
-	public static void setProperties(Properties props) {
-		measurementproperties = props;
+	public OneMeasurementHistogramCustom(String name, Properties props) {
+		super(name);
+		histogram = new int[BUCKETS];
+		histogramoverflow = 0;
+		operations = 0;
+		totallatency = 0;
+		windowoperations = 0;
+		windowtotallatency = 0;
+		min = -1;
+		max = -1;
+		returncodes = new HashMap<Integer, int[]>();
 	}
 
-	/**
-	 * Return the singleton Measurements object.
-	 */
-	public synchronized static Measurements getMeasurements() {
-		if (singleton == null) {
-			singleton = new Measurements(measurementproperties);
-		}
-		return singleton;
-	}
-
-	HashMap<String, OneMeasurement> data;
-	boolean histogram = true;
-
-	private Properties _props;
-
-	/**
-	 * Create a new object with the specified properties.
-	 */
-	public Measurements(Properties props) {
-		data = new HashMap<String, OneMeasurement>();
-
-		_props = props;
-
-		if (_props.getProperty(MEASUREMENT_TYPE, MEASUREMENT_TYPE_DEFAULT)
-				.compareTo("histogram") == 0) {
-			histogram = true;
-		} else {
-			histogram = false;
-		}
-	}
-
-	OneMeasurement constructOneMeasurement(String name) {
-		if (histogram) {
-			return new OneMeasurementHistogramCustom(name, _props);
-		} else {
-			return new OneMeasurementTimeSeries(name, _props);
-		}
-	}
-
-	/**
-	 * Report a single value of a single metric. E.g. for read latency,
-	 * operation="READ" and latency is the measured value.
-	 */
-	public synchronized void measure(String operation, int latency) {
-		if (!data.containsKey(operation)) {
-			synchronized (this) {
-				if (!data.containsKey(operation)) {
-					data.put(operation, constructOneMeasurement(operation));
-				}
-			}
-		}
-		try {
-			data.get(operation).measure(latency);
-		} catch (java.lang.ArrayIndexOutOfBoundsException e) {
-			System.out
-					.println("ERROR: java.lang.ArrayIndexOutOfBoundsException - ignoring and continuing");
-			e.printStackTrace();
-			e.printStackTrace(System.out);
-		}
-	}
-
-	/**
-	 * Report a return code for a single DB operaiton.
-	 */
-	public void reportReturnCode(String operation, int code) {
-		if (!data.containsKey(operation)) {
-			synchronized (this) {
-				if (!data.containsKey(operation)) {
-					data.put(operation, constructOneMeasurement(operation));
-				}
-			}
-		}
-		data.get(operation).reportReturnCode(code);
-	}
-
-	/**
-	 * Export the current measurements to a suitable format.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @param exporter
-	 *            Exporter representing the type of format to write to.
-	 * @throws IOException
-	 *             Thrown if the export failed.
+	 * @see com.yahoo.ycsb.OneMeasurement#reportReturnCode(int)
 	 */
+	public synchronized void reportReturnCode(int code) {
+		Integer Icode = code;
+		if (!returncodes.containsKey(Icode)) {
+			int[] val = new int[1];
+			val[0] = 0;
+			returncodes.put(Icode, val);
+		}
+		returncodes.get(Icode)[0]++;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.yahoo.ycsb.OneMeasurement#measure(int)
+	 */
+	public synchronized void measure(int latency) {
+		if (latency >= (BUCKETS * 50)) {
+			histogramoverflow++;
+		} else {
+			histogram[latency/50]++;
+		}
+		operations++;
+		totallatency += latency;
+		windowoperations++;
+		windowtotallatency += latency;
+
+		if ((min < 0) || (latency < min)) {
+			min = latency;
+		}
+
+		if ((max < 0) || (latency > max)) {
+			max = latency;
+		}
+	}
+
+	@Override
 	public void exportMeasurements(MeasurementsExporter exporter)
 			throws IOException {
-		for (OneMeasurement measurement : data.values()) {
-			measurement.exportMeasurements(exporter);
+		exporter.write(getName(), "Operations", operations);
+		exporter.write(getName(), "AverageLatency(us)",
+				(((double) totallatency) / ((double) operations)));
+		exporter.write(getName(), "MinLatency(us)", min);
+		exporter.write(getName(), "MaxLatency(us)", max);
+
+		int opcounter = 0;
+		boolean done95th = false;
+		for (int i = 0; i < BUCKETS; i++) {
+			opcounter += histogram[i];
+			if ((!done95th)
+					&& (((double) opcounter) / ((double) operations) >= 0.95)) {
+				exporter.write(getName(), "95thPercentileLatency(us)", i);
+				done95th = true;
+			}
+			if (((double) opcounter) / ((double) operations) >= 0.99) {
+				exporter.write(getName(), "99thPercentileLatency(us)", i);
+				break;
+			}
 		}
+
+		for (Integer I : returncodes.keySet()) {
+			int[] val = returncodes.get(I);
+			exporter.write(getName(), "Return=" + I, val[0]);
+		}
+
+		for (int i = 0; i < BUCKETS; i++) {
+			exporter.write(getName(), Integer.toString(i*50), histogram[i]);
+		}
+		exporter.write(getName(), ">" + BUCKETS, histogramoverflow);
 	}
 
-	/**
-	 * Return a one line summary of the measurements.
-	 */
+	@Override
 	public String getSummary() {
-		String ret = "";
-		for (OneMeasurement m : data.values()) {
-			ret += m.getSummary() + " ";
+		if (windowoperations == 0) {
+			return "";
 		}
-
-		return ret;
+		DecimalFormat d = new DecimalFormat("#.##");
+		double report = ((double) windowtotallatency)
+				/ ((double) windowoperations);
+		windowtotallatency = 0;
+		windowoperations = 0;
+		return "[" + getName() + " AverageLatency(us)=" + d.format(report)
+				+ "]";
 	}
+
 }

@@ -19,6 +19,8 @@ package com.yahoo.ycsb;
 
 import java.util.Properties;
 
+import com.yahoo.ycsb.database.DB;
+
 /**
  * One experiment scenario. One object of this type will be instantiated and
  * shared among all client threads. This class should be constructed using a
@@ -76,7 +78,7 @@ public abstract class Workload {
 	 */
 	public void cleanup() throws WorkloadException {
 	}
-
+	
 	/**
 	 * Do one insert operation. Because it will be called concurrently from
 	 * multiple client threads, this function must be thread safe. However,
@@ -86,7 +88,7 @@ public abstract class Workload {
 	 * mutations on threadstate. Mutations to threadstate do not need to be
 	 * synchronized, since each thread has its own threadstate instance.
 	 */
-	public abstract boolean doInsert(DB db, Object threadstate);
+	public abstract boolean doInsert(DataStore db, Object threadstate);
 
 	/**
 	 * Do one transaction operation. Because it will be called concurrently from
@@ -103,5 +105,5 @@ public abstract class Workload {
 	 *         traces from a file, return true when there are more to do, false
 	 *         when you are done.
 	 */
-	public abstract boolean doTransaction(DB db, Object threadstate);
+	public abstract boolean doTransaction(DataStore db, Object threadstate);
 }

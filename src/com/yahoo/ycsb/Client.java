@@ -21,9 +21,12 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import com.yahoo.ycsb.database.DB;
+import com.yahoo.ycsb.database.DBFactory;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
+import com.yahoo.ycsb.memcached.MemcachedFactory;
 
 //import org.apache.log4j.BasicConfigurator;
 
@@ -132,7 +135,7 @@ class StatusThread extends Thread {
 class ClientThread extends Thread {
 	static Random random = new Random();
 
-	DB _db;
+	DataStore _db;
 	boolean _dotransactions;
 	Workload _workload;
 	int _opcount;
@@ -164,7 +167,7 @@ class ClientThread extends Thread {
 	 * @param targetperthreadperms
 	 *            target number of operations per thread per ms
 	 */
-	public ClientThread(DB db, boolean dotransactions, Workload workload,
+	public ClientThread(DataStore db, boolean dotransactions, Workload workload,
 			int threadid, int threadcount, Properties props, int opcount,
 			double targetperthreadperms) {
 		// TODO: consider removing threadcount and threadid
@@ -187,7 +190,7 @@ class ClientThread extends Thread {
 	public void run() {
 		try {
 			_db.init();
-		} catch (DBException e) {
+		} catch (DataStoreException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
 			return;
@@ -237,8 +240,7 @@ class ClientThread extends Thread {
 						// because it smooths timing inaccuracies (from sleep()
 						// taking an int,
 						// current time in millis) over many operations
-						while (System.currentTimeMillis() - st < ((double) _opsdone)
-								/ _target) {
+						while (System.currentTimeMillis() - st < ((double) _opsdone) / _target) {
 							try {
 								sleep(1);
 							} catch (InterruptedException e) {
@@ -287,7 +289,7 @@ class ClientThread extends Thread {
 
 		try {
 			_db.cleanup();
-		} catch (DBException e) {
+		} catch (DataStoreException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
 			return;
@@ -644,10 +646,13 @@ public class Client {
 		Vector<Thread> threads = new Vector<Thread>();
 
 		for (int threadid = 0; threadid < threadcount; threadid++) {
-			DB db = null;
+			DataStore db = null;
 			try {
-				db = DBFactory.newDB(dbname, props);
-			} catch (UnknownDBException e) {
+				if (dbname.equals("com.yahoo.ycsb.db.SpymemcachedClient"))
+					db = MemcachedFactory.newMemcached(dbname, props);
+				else
+					db = DBFactory.newDB(dbname, props);
+			} catch (UnknownDataStoreException e) {
 				System.out.println("Unknown DB " + dbname);
 				System.exit(0);
 			}

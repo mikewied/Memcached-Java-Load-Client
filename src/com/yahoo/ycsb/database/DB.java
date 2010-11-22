@@ -15,12 +15,14 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.database;
 
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
+
+import com.yahoo.ycsb.DataStore;
 
 /**
  * A layer for accessing a database to be benchmarked. Each thread in the client
@@ -43,40 +45,7 @@ import java.util.Vector;
  * also recommend you explain the semantics you chose when presenting
  * performance results.
  */
-public abstract class DB {
-	/**
-	 * Properties for configuring this DB.
-	 */
-	Properties _p = new Properties();
-
-	/**
-	 * Set the properties for this DB.
-	 */
-	public void setProperties(Properties p) {
-		_p = p;
-
-	}
-
-	/**
-	 * Get the set of properties for this DB.
-	 */
-	public Properties getProperties() {
-		return _p;
-	}
-
-	/**
-	 * Initialize any state for this DB. Called once per DB instance; there is
-	 * one DB instance per client thread.
-	 */
-	public void init() throws DBException {
-	}
-
-	/**
-	 * Cleanup any state for this DB. Called once per DB instance; there is one
-	 * DB instance per client thread.
-	 */
-	public void cleanup() throws DBException {
-	}
+public abstract class DB extends DataStore{
 
 	/**
 	 * Read a record from the database. Each field/value pair from the result

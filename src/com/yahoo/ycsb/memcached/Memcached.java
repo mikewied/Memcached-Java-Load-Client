@@ -15,31 +15,64 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.memcached;
+
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
+
+import com.yahoo.ycsb.DataStore;
 
 /**
- * Could not create the specified DB.
+ * A layer for accessing a database to be benchmarked. Each thread in the client
+ * will be given its own instance of whatever DB class is to be used in the
+ * test. This class should be constructed using a no-argument constructor, so we
+ * can load it dynamically. Any argument-based initialization should be done by
+ * init().
+ * 
+ * Note that YCSB does not make any use of the return codes returned by this
+ * class. Instead, it keeps a count of the return values and presents them to
+ * the user.
+ * 
+ * The semantics of methods such as insert, update and delete vary from database
+ * to database. In particular, operations may or may not be durable once these
+ * methods commit, and some systems may return 'success' regardless of whether
+ * or not a tuple with a matching key existed before the call. Rather than
+ * dictate the exact semantics of these methods, we recommend you either
+ * implement them to match the database's default semantics, or the semantics of
+ * your target application. For the sake of comparison between experiments we
+ * also recommend you explain the semantics you chose when presenting
+ * performance results.
  */
-public class UnknownDBException extends Exception {
+public abstract class Memcached extends DataStore{
+
 	/**
+	 * Insert a record in the database. Any field/value pairs in the specified
+	 * values HashMap will be written into the record with the specified record
+	 * key.
 	 * 
+	 * @param key
+	 *            The record key of the record to get.
+	 * @param value
+	 *            The Object that the key should contain
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
 	 */
-	private static final long serialVersionUID = 459099842269616836L;
-
-	public UnknownDBException(String message) {
-		super(message);
-	}
-
-	public UnknownDBException() {
-		super();
-	}
-
-	public UnknownDBException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public UnknownDBException(Throwable cause) {
-		super(cause);
-	}
+	public abstract int get(String key, Object value);
+	
+	/**
+	 * Insert a record in the database. Any field/value pairs in the specified
+	 * values HashMap will be written into the record with the specified record
+	 * key.
+	 * 
+	 * @param key
+	 *            The record key of the record to insert.
+	 * @param value
+	 *            An Object to use as the key's value
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int set(String key, Object value);
 
 }

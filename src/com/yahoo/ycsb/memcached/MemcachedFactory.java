@@ -15,26 +15,28 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.memcached;
 
 import java.util.Properties;
+
+import com.yahoo.ycsb.UnknownDataStoreException;
 
 /**
  * Creates a DB layer by dynamically classloading the specified DB class.
  */
-public class DBFactory {
+public class MemcachedFactory {
 	@SuppressWarnings("unchecked")
-	public static DB newDB(String dbname, Properties properties)
-			throws UnknownDBException {
-		ClassLoader classLoader = DBFactory.class.getClassLoader();
+	public static Memcached newMemcached(String memcachedname, Properties properties)
+			throws UnknownDataStoreException {
+		ClassLoader classLoader = MemcachedFactory.class.getClassLoader();
 
-		DB ret = null;
+		Memcached ret = null;
 
 		try {
-			Class dbclass = classLoader.loadClass(dbname);
+			Class memcachedclass = classLoader.loadClass(memcachedname);
 			// System.out.println("dbclass.getName() = " + dbclass.getName());
 
-			ret = (DB) dbclass.newInstance();
+			ret = (Memcached) memcachedclass.newInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -42,7 +44,7 @@ public class DBFactory {
 
 		ret.setProperties(properties);
 
-		return new DBWrapper(ret);
+		return new MemcachedWrapper(ret);
 	}
 
 }

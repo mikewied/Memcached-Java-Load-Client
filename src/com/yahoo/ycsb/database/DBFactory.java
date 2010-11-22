@@ -15,31 +15,36 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.database;
+
+import java.util.Properties;
+
+import com.yahoo.ycsb.UnknownDataStoreException;
 
 /**
- * Something bad happened while interacting with the database.
+ * Creates a DB layer by dynamically classloading the specified DB class.
  */
-public class DBException extends Exception {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6646883591588721475L;
+public class DBFactory {
+	@SuppressWarnings("unchecked")
+	public static DB newDB(String dbname, Properties properties)
+			throws UnknownDataStoreException {
+		ClassLoader classLoader = DBFactory.class.getClassLoader();
 
-	public DBException(String message) {
-		super(message);
-	}
+		DB ret = null;
 
-	public DBException() {
-		super();
-	}
+		try {
+			Class dbclass = classLoader.loadClass(dbname);
+			// System.out.println("dbclass.getName() = " + dbclass.getName());
 
-	public DBException(String message, Throwable cause) {
-		super(message, cause);
-	}
+			ret = (DB) dbclass.newInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 
-	public DBException(Throwable cause) {
-		super(cause);
+		ret.setProperties(properties);
+
+		return new DBWrapper(ret);
 	}
 
 }

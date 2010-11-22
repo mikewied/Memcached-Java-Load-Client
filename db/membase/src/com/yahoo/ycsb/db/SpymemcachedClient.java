@@ -19,10 +19,11 @@ import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.protocol.TCPMemcachedNodeImpl;
 
-import com.yahoo.ycsb.DB;
+import com.yahoo.ycsb.database.DB;
+import com.yahoo.ycsb.memcached.Memcached;
 
 
-public class SpymemcachedClient extends DB {
+public class SpymemcachedClient extends Memcached {
 	public static MemcachedClient client;
 	public static final String VERBOSE = "memcached.verbose";
 	public static final String VERBOSE_DEFAULT = "true";
@@ -74,8 +75,7 @@ public class SpymemcachedClient extends DB {
 	
 	
 	@Override
-	public int read(String table, String key, Set<String> fields,
-			HashMap<String, String> result) {
+	public int get(String key, Object value) {
 		// TODO Auto-generated method stub
 		//System.out.println("Getting key: " + key);
 		
@@ -83,62 +83,34 @@ public class SpymemcachedClient extends DB {
 		long start = System.currentTimeMillis();
 			long end;
 			
-			/*while (!success.isDone()) {
+			
+			while (!success.isDone()) {
 				try {
 					Thread.sleep(1);
-					end = System.currentTimeMillis();
-					if ((end -start) > 1000)
-						System.out.println("Duration: " + (end - start) + ", Queue: " + client.conn.locator.getPrimary(key).toString());
-					
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
-			end = System.currentTimeMillis();
-			if (end - start > 1000)
-				System.out.println(end - start);
-		*/
+		
 		try {
-			if (success.get() != null) {
+			if (success.get() == null) {
 				System.out.println("Error");
 				return -1;
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*System.out.println("Queue: " + client.conn.locator.getPrimary(key).toString());
-		if (client.get(key) == null)
-			return -1;*/
-		
 		return 0;
 	}
-
+	
 	@Override
-	public int scan(String table, String startkey, int recordcount,
-			Set<String> fields, Vector<HashMap<String, String>> result) {
-		System.out.println("Scan");
-		return 0;
-	}
-
-	@Override
-	public int update(String table, String key, HashMap<String, String> values) {
-		//System.out.println("Update");
-		return 0; //insert(table, key, values);
-	}
-
-	@Override
-	public int insert(String table, String key, HashMap<String, String> values) {
-		//Set<String> keys = values.keySet();
-		//Iterator<String> itr = keys.iterator();
+	public int set(String key, Object value) {
+		long start  = System.nanoTime();
+		Future<Boolean> success = client.set(key, 0, value);
 		
-		Future<Boolean> success = client.set(key, 0, values);
-		
-		/* -- Code to test Spymemcached 136 -- */
+		/* -- Code to test Spymemcached 136 -- 
 		long start = System.currentTimeMillis();
 		long end;
 		String str = "";
@@ -162,7 +134,7 @@ public class SpymemcachedClient extends DB {
 		end = System.currentTimeMillis();
 		if (end - start > 1000)
 			System.out.println(end - start);
-		
+		*/
 		try {
 			if (!success.get().booleanValue())
 				return -1;
@@ -171,16 +143,18 @@ public class SpymemcachedClient extends DB {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
+		long end  = System.nanoTime();
+		//System.out.println("Time: " + ((double)(end-start))/1000000.0);
 		return 0;
 	}
-
+/*
 	@Override
 	public int delete(String table, String key) {
 		// TODO Auto-generated method stub
 		System.out.println("Delete");
 		return 0;
 	}
-	
+	*/
 	private byte[] ipv4AddressToByte(String address) {
 		byte[] b = new byte[4];
 		String[] str = address.split("\\.");

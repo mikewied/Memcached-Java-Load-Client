@@ -24,16 +24,22 @@
 db=com.yahoo.ycsb.db.SpymemcachedClient
 memcached.address=10.2.1.11
 memcached.verbose=false
-recordcount=500000
-operationcount=500000
-workload=com.yahoo.ycsb.workloads.CoreWorkload
+
+histogram.buckets=20
+exportfile=results.txt
+recordcount=10000
+operationcount=10000000
+workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
 readallfields=true
 
+insertproportion=0
 readproportion=0.95
 updateproportion=0.05
 scanproportion=0
-insertproportion=0
+
+memgetproportion=0.95
+memsetproportion=0.05
 
 requestdistribution=zipfian
 
