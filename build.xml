@@ -89,6 +89,33 @@
          </fileset>
       </javadoc>
    </target>
+   	
+   <target name="load">
+	  <exec executable="java" >
+	     <arg value="-cp" />
+	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
+		 <arg value="com.yahoo.ycsb.Client" />
+		 <arg value="-load" />
+	  	 <arg value="-db" />
+	  	 <arg value="com.yahoo.ycsb.db.SpymemcachedClient" />
+		 <arg value="-P" />
+	  	<arg value="workloads/workloadb" />
+	  </exec>
+   </target>
+   	
+   <target name="run">
+	  <exec executable="java" >
+	     <arg value="-cp" />
+	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
+		 <arg value="com.yahoo.ycsb.Client" />
+		 <arg value="-t" />
+	  	 <arg value="-db" />
+	  	 <arg value="com.yahoo.ycsb.db.SpymemcachedClient" />
+		 <arg value="-P" />
+	  	<arg value="workloads/workloadb" />
+	  </exec>
+   </target>
+   		
 
 </project>
 
