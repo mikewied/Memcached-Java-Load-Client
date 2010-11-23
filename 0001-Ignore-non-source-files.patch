@@ -1,0 +1,118 @@
+From 150decaffffdba36d67c0e0b65aa79069f6cf75b Mon Sep 17 00:00:00 2001
+From: Dustin Sallings <dustin@spy.net>
+Date: Mon, 15 Nov 2010 17:26:57 -0800
+Subject: [PATCH] Ignore non-source files.
+
+---
+ .gitignore    |    4 +++
+ README~       |   70 ---------------------------------------------------------
+ lib/.DS_Store |  Bin 6148 -> 0 bytes
+ 3 files changed, 4 insertions(+), 70 deletions(-)
+ create mode 100644 .gitignore
+ delete mode 100644 README~
+ delete mode 100644 lib/.DS_Store
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..1e64684
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,4 @@
++#*
++*~
++.DS_Store
++/build/
+\ No newline at end of file
+diff --git a/README~ b/README~
+deleted file mode 100644
+index 9b18cc4..0000000
+--- a/README~
++++ /dev/null
+@@ -1,70 +0,0 @@
+-Yahoo! Cloud System Benchmark (YCSB)
+-
+-http://wiki.github.com/brianfrankcooper/YCSB/
+-http://research.yahoo.com/Web_Information_Management/YCSB
+-ycsb-users@yahoogroups.com
+-
+-
+-Overview
+-========
+-
+-It is difficult to decide which system is right for your application,
+-partially because the features differ between systems, and partially
+-because there is not an easy way to compare the performance of one
+-system versus another.
+-
+-The goal of the YCSB project is to develop a framework and common set
+-of workloads for evaluating the performance of different "key-value"
+-and "cloud" serving stores. The project comprises two things:
+-
+-* The YCSB Client, an extensible workload generator
+-
+-* The Core workloads, a set of workload scenarios to be executed by
+-  the generator
+-
+-Although the core workloads provide a well rounded picture of a
+-system's performance, the Client is extensible so that you can define
+-new and different workloads to examine system aspects, or application
+-scenarios, not adequately covered by the core workload. Similarly, the
+-Client is extensible to support benchmarking different
+-databases. Although we include sample code for benchmarking HBase and
+-Cassandra, it is straightforward to write a new interface layer to
+-benchmark your favorite database.
+-
+-A common use of the tool is to benchmark multiple systems and compare
+-them. For example, you can install multiple systems on the same
+-hardward configuration, and run the same workloads against each
+-system. Then you can plot the performance of each system (for example,
+-as latency versus throughput curves) to see when one system does
+-better than another.
+-
+-Detailed information about using the benchmark is available in the
+-doc/index.html file.
+-
+-Revision History
+-================
+-
+-0.1.3 - 10/26/10
+-
+-- Voldemort binding (rsumbaly)
+-- HBase client improvements (ryanobjc)
+-- Fixes to Cassandra 0.7 binding (johanoskarsson, nickmbailey)
+-- Added an interface for exporting the measurements and a JSON implementation. It can write to both stdout and to a file (johanoskarsson)
+-- Other minor fixes (brianfrankcooper)
+-
+-0.1.2 - 5/12/10
+-
+-- MongoDB binding (ypai)
+-- Cassandra 0.7 binding (johanoskarsson)
+-- Simple command line interface (brianfrankcooper)
+-- Faster string generation (tlipcon)
+-- Avoid Bytes conversion in HBaseClient (tlipcon)
+-
+-0.1.1 - 4/25/10
+-
+-- Compiles under 1.5
+-- Fixes doc and HBaseClient bugs
+-
+-0.1.0 - 4/23/10 
+-
+-- Initial open source release
+diff --git a/lib/.DS_Store b/lib/.DS_Store
+deleted file mode 100644
+index 5008ddfcf53c02e82d7eee2e57c38e5672ef89f6..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+HcmV?d00001
+
+literal 6148
+zcmeH~Jr2S!425mzP>H1@V-^m;4Wg<&0T*E43hX&L&p$$qDprKhvt+--jT7}7np#A3
+zem<@ulZcFPQ@L2!n>{z**<q8>++&mCkOWA81W14cNZ<zv;LbK1Poaz?KmsK2CSc!(
+z0ynLxE!0092;Krf2c+FF_Fe*7ECH>lEfg7;MkzE(HCqgga^y>{tEnwC%0;vJ&^%eQ
+zLs35+`xjp>T0<F0fCPF1$Cyrb|F7^5{eNG?83~ZUUlGt@xh*qZDeu<Z%US-OSsOPv
+j)R!Z4KLME7ReXlK;d!wEw5GODWMKRea10D2@KpjYNUI8I
+
+-- 
+1.7.3.2
+
