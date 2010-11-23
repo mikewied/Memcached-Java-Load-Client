@@ -68,7 +68,7 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int get(String key, Object value) {
-		System.out.println("GET " + key);
+		//System.out.println("GET " + key);
 		Future<Object> success = client.asyncGet(key);		
 		try {
 			if (success.get() == null) {
@@ -87,7 +87,7 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int set(String key, Object value) {
-		System.out.println("SET " + key);
+		//System.out.println("SET " + key);
 		try {
 			if (!client.set(key, 0, value).get().booleanValue())
 				return -1;
