@@ -270,8 +270,7 @@ class ClientThread extends Thread {
 						// because it smooths timing inaccuracies (from sleep()
 						// taking an int,
 						// current time in millis) over many operations
-						while (System.currentTimeMillis() - st < ((double) _opsdone)
-								/ _target) {
+						while (System.currentTimeMillis() - st < ((double) _opsdone) / _target) {
 							try {
 								sleep(1);
 							} catch (InterruptedException e) {

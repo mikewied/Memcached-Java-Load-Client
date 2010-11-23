@@ -80,7 +80,7 @@ public class SpymemcachedClient extends Memcached {
 		//System.out.println("Getting key: " + key);
 		
 		Future<Object> success = client.asyncGet(key);
-		long start = System.currentTimeMillis();
+		/*long start = System.currentTimeMillis();
 			long end;
 			
 			
@@ -90,7 +90,7 @@ public class SpymemcachedClient extends Memcached {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			}
+			}*/
 		
 		try {
 			if (success.get() == null) {
@@ -107,8 +107,7 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int set(String key, Object value) {
-		long start  = System.nanoTime();
-		Future<Boolean> success = client.set(key, 0, value);
+		//Future<Boolean> success = client.set(key, 0, value);
 		
 		/* -- Code to test Spymemcached 136 -- 
 		long start = System.currentTimeMillis();
@@ -136,15 +135,13 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println(end - start);
 		*/
 		try {
-			if (!success.get().booleanValue())
+			if (!client.set(key, 0, value).get().booleanValue())
 				return -1;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		long end  = System.nanoTime();
-		//System.out.println("Time: " + ((double)(end-start))/1000000.0);
 		return 0;
 	}
 /*
