@@ -7,5 +7,6 @@
 	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.5.2.jar"/>
 	<classpathentry kind="lib" path="db/mongodb/lib/mongo-2.3.jar"/>
 	<classpathentry kind="lib" path="lib/memcached-2.5-14-g3b3b3c8.jar" sourcepath="lib/memcached-2.5-14-g3b3b3c8-sources.jar"/>
+	<classpathentry kind="lib" path="lib/memcached-2.5-14-g3b3b3c8-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
