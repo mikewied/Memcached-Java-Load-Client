@@ -28,7 +28,7 @@ memcached.verbose=false
 histogram.buckets=20
 exportfile=results.txt
 recordcount=10000
-operationcount=100000
+operationcount=5000000
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
 readallfields=true
@@ -43,5 +43,5 @@ memsetproportion=0.05
 
 requestdistribution=zipfian
 
-threadcount=1
+threadcount=16
 #target=10000

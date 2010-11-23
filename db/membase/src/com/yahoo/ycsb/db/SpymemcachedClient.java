@@ -4,22 +4,14 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.sql.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.protocol.TCPMemcachedNodeImpl;
 
-import com.yahoo.ycsb.database.DB;
 import com.yahoo.ycsb.memcached.Memcached;
 
 
@@ -98,9 +90,11 @@ public class SpymemcachedClient extends Memcached {
 				return -1;
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			System.out.println("GET Interrupted");
 		} catch (ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("GET Execution");
+		} catch (RuntimeException e) {
+			System.out.println("GET Runtime");
 		}
 		return 0;
 	}
@@ -138,9 +132,11 @@ public class SpymemcachedClient extends Memcached {
 			if (!client.set(key, 0, value).get().booleanValue())
 				return -1;
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			System.out.println("SET Interrupted");
 		} catch (ExecutionException e) {
-			e.printStackTrace();
+			System.out.println("SET Execution");
+		} catch (RuntimeException e) {
+			System.out.println("SET Runtime");
 		}
 		return 0;
 	}
