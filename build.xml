@@ -79,6 +79,7 @@
        <delete includeemptydirs="true">
           <fileset dir="build" includes="**/*"/>
        </delete>
+       <delete dir="${build.dir}"/>
     </target>
 
    <target name="doc">
