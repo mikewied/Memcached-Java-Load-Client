@@ -25,7 +25,7 @@ import com.yahoo.ycsb.UnknownDataStoreException;
  * Creates a DB layer by dynamically classloading the specified DB class.
  */
 public class DBFactory {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public static DB newDB(String dbname, Properties properties)
 			throws UnknownDataStoreException {
 		ClassLoader classLoader = DBFactory.class.getClassLoader();

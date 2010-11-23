@@ -19,7 +19,6 @@ package com.yahoo.ycsb.workloads;
 
 import java.util.Properties;
 import com.yahoo.ycsb.*;
-import com.yahoo.ycsb.database.DB;
 import com.yahoo.ycsb.generator.CounterGenerator;
 import com.yahoo.ycsb.generator.DiscreteGenerator;
 import com.yahoo.ycsb.generator.Generator;
@@ -28,12 +27,7 @@ import com.yahoo.ycsb.generator.ScrambledZipfianGenerator;
 import com.yahoo.ycsb.generator.SkewedLatestGenerator;
 import com.yahoo.ycsb.generator.UniformIntegerGenerator;
 import com.yahoo.ycsb.generator.ZipfianGenerator;
-import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.memcached.Memcached;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Vector;
 
 /**
  * The core benchmark scenario. Represents a set of clients doing simple CRUD

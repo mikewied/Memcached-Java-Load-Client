@@ -15,93 +15,40 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb.memcached;
-
-import java.util.Properties;
-
-import com.yahoo.ycsb.DataStoreException;
-import com.yahoo.ycsb.measurements.Measurements;
+package com.yahoo.ycsb.generator;
 
 /**
- * Wrapper around a "real" DB that measures latencies and counts return codes.
+ * Generate a popularity distribution of items, skewed to favor recent items
+ * significantly more than older items.
  */
-public class MemcachedWrapper extends Memcached {
-	Memcached _db;
-	Measurements _measurements;
+public class ChurnGenerator extends IntegerGenerator {
+	CounterGenerator _basis;
+	ZipfianGenerator _zipfian;
 
-	public MemcachedWrapper(Memcached memcached) {
-		_db = memcached;
-		_measurements = Measurements.getMeasurements();
+	public ChurnGenerator(CounterGenerator basis) {
+		_basis = basis;
+		_zipfian = new ZipfianGenerator(Integer.parseInt(_basis.lastString()));
+		nextInt();
 	}
 
 	/**
-	 * Set the properties for this Memcached.
+	 * Generate the next string in the distribution, skewed Zipfian favoring the
+	 * items most recently returned by the basis generator.
 	 */
-	public void setProperties(Properties p) {
-		_db.setProperties(p);
+	public int nextInt() {
+		int max = Integer.parseInt(_basis.lastString());
+		int nextint = max - _zipfian.nextInt(max);
+		setLastInt(nextint);
+		return nextint;
 	}
 
-	/**
-	 * Get the set of properties for this Memcached.
-	 */
-	public Properties getProperties() {
-		return _db.getProperties();
-	}
+	public static void main(String[] args) {
+		SkewedLatestGenerator gen = new SkewedLatestGenerator(
+				new CounterGenerator(1000));
+		for (int i = 0; i < Integer.parseInt(args[0]); i++) {
+			System.out.println(gen.nextString());
+		}
 
-	/**
-	 * Initialize any state for this Memcached. Called once per Memcached instance; there is
-	 * one Memcached instance per client thread.
-	 */
-	public void init() throws DataStoreException {
-		_db.init();
-	}
-
-	/**
-	 * Cleanup any state for this Memcached. Called once per Memcached instance; there is one
-	 * Memcached instance per client thread.
-	 */
-	public void cleanup() throws DataStoreException {
-		_db.cleanup();
-	}
-
-	/**
-	 * Insert a record in the database. Any field/value pairs in the specified
-	 * values HashMap will be written into the record with the specified record
-	 * key.
-	 * 
-	 * @param key
-	 *            The record key of the record to get.
-	 * @param value
-	 *            The Object that the key should contain
-	 * @return Zero on success, a non-zero error code on error
-	 */
-	public int get(String key, Object value) {
-		long st = System.nanoTime();
-		int res = _db.get(key, value);
-		long en = System.nanoTime();
-		_measurements.measure("GET", (int) ((en - st) / 1000));
-		_measurements.reportReturnCode("GET", res);
-		return res;
-	}
-	
-	/**
-	 * Insert a record in the database. Any field/value pairs in the specified
-	 * values HashMap will be written into the record with the specified record
-	 * key.
-	 * 
-	 * @param key
-	 *            The record key of the record to set.
-	 * @param value
-	 *            The Object to use as the keys value
-	 * @return Zero on success, a non-zero error code on error
-	 */
-	public int set(String key, Object value) {
-		long st = System.nanoTime();
-		int res = _db.set(key, value);
-		long en = System.nanoTime();
-		_measurements.measure("SET", (int) ((en - st) / 1000));
-		_measurements.reportReturnCode("SET", res);
-		return res;
 	}
 
 }

@@ -17,11 +17,6 @@
 
 package com.yahoo.ycsb.memcached;
 
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
-
 import com.yahoo.ycsb.DataStore;
 
 /**

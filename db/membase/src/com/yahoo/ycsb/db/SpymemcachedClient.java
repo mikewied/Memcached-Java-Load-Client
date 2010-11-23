@@ -36,7 +36,7 @@ public class SpymemcachedClient extends Memcached {
 	 * Initialize any state for this DB. Called once per DB instance; there is
 	 * one DB instance per client thread.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public void init() {
 		verbose = Boolean.parseBoolean(getProperties().getProperty(VERBOSE, VERBOSE_DEFAULT));
 		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
@@ -68,22 +68,8 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int get(String key, Object value) {
-		// TODO Auto-generated method stub
-		//System.out.println("Getting key: " + key);
-		
-		Future<Object> success = client.asyncGet(key);
-		/*long start = System.currentTimeMillis();
-			long end;
-			
-			
-			while (!success.isDone()) {
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}*/
-		
+		System.out.println("GET " + key);
+		Future<Object> success = client.asyncGet(key);		
 		try {
 			if (success.get() == null) {
 				System.out.println("Error");
@@ -101,33 +87,7 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int set(String key, Object value) {
-		//Future<Boolean> success = client.set(key, 0, value);
-		
-		/* -- Code to test Spymemcached 136 -- 
-		long start = System.currentTimeMillis();
-		long end;
-		String str = "";
-		while (!success.isDone()) {
-			try {
-				Thread.sleep(1);
-				end = System.currentTimeMillis();
-				if ((end - start) > 30000) {
-					//System.out.println("Duration: " + (end - start) + ", Queue: " + client.conn.locator.getPrimary(key).toString());
-					Date date = new Date(System.currentTimeMillis());
-					
-					str = key + "\n";
-				}
-				
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		System.out.print(str);	
-		end = System.currentTimeMillis();
-		if (end - start > 1000)
-			System.out.println(end - start);
-		*/
+		System.out.println("SET " + key);
 		try {
 			if (!client.set(key, 0, value).get().booleanValue())
 				return -1;

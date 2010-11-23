@@ -19,8 +19,6 @@ package com.yahoo.ycsb;
 
 import java.util.Properties;
 
-import com.yahoo.ycsb.database.DB;
-
 /**
  * One experiment scenario. One object of this type will be instantiated and
  * shared among all client threads. This class should be constructed using a

@@ -18,7 +18,6 @@
 package com.yahoo.ycsb.database;
 
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 

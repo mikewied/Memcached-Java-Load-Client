@@ -25,7 +25,7 @@ import com.yahoo.ycsb.UnknownDataStoreException;
  * Creates a DB layer by dynamically classloading the specified DB class.
  */
 public class MemcachedFactory {
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public static Memcached newMemcached(String memcachedname, Properties properties)
 			throws UnknownDataStoreException {
 		ClassLoader classLoader = MemcachedFactory.class.getClassLoader();

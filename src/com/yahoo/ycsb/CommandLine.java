@@ -68,6 +68,7 @@ public class CommandLine {
 		System.out.println("  quit - Quit");
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static void main(String[] args) {
 		int argindex = 0;
 
@@ -109,8 +110,7 @@ public class CommandLine {
 					System.exit(0);
 				}
 
-				for (Enumeration e = myfileprops.propertyNames(); e
-						.hasMoreElements();) {
+				for (Enumeration e = myfileprops.propertyNames(); e.hasMoreElements();) {
 					String prop = (String) e.nextElement();
 
 					fileprops.setProperty(prop, myfileprops.getProperty(prop));

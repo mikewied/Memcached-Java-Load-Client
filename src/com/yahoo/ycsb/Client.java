@@ -21,7 +21,6 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
-import com.yahoo.ycsb.database.DB;
 import com.yahoo.ycsb.database.DBFactory;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
@@ -416,7 +415,7 @@ public class Client {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public static void main(String[] args) {
 		String dbname;
 		Properties props = new Properties();
@@ -655,7 +654,7 @@ public class Client {
 				System.out.println("Unknown DB " + dbname);
 				System.exit(0);
 			}
-
+			System.out.println(opcount);
 			Thread t = new ClientThread(db, dotransactions, workload, threadid,
 					threadcount, props, opcount / threadcount,
 					targetperthreadperms);

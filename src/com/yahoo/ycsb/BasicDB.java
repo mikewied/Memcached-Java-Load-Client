@@ -60,7 +60,7 @@ public class BasicDB extends DB {
 	 * Initialize any state for this DB. Called once per DB instance; there is
 	 * one DB instance per client thread.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public void init() {
 		verbose = Boolean.parseBoolean(getProperties().getProperty(VERBOSE,
 				VERBOSE_DEFAULT));
