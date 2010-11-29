@@ -42,6 +42,9 @@ memaddproportion=0.05
 memgetproportion=0.90
 memsetproportion=0.05
 
+workingset=1000
+churndelta=2000
+
 requestdistribution=churn
 
 threadcount=1
