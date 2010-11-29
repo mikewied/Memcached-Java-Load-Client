@@ -20,6 +20,7 @@ package com.yahoo.ycsb.workloads;
 import java.util.Properties;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.database.DB;
+import com.yahoo.ycsb.generator.ChurnGenerator;
 import com.yahoo.ycsb.generator.CounterGenerator;
 import com.yahoo.ycsb.generator.DiscreteGenerator;
 import com.yahoo.ycsb.generator.Generator;
@@ -230,6 +231,16 @@ public class CoreWorkload extends Workload {
 	 * Default insert order.
 	 */
 	public static final String INSERT_ORDER_PROPERTY_DEFAULT = "hashed";
+	
+	// The size of the working set used by the churn generator
+	public static final String CHURN_WORKING_SET_PROPERTY = "workingset";
+	public static final String CHURN_WORKING_SET_PROPERTY_DEFAULT = System.getProperty(Client.RECORD_COUNT_PROPERTY, "0");
+	int workingset;
+	
+	// The amount of operations to do before evicting an item from the working set and adding a new one
+	public static final String CHURN_WORKING_SET_DELTA_PROPERTY = "churndelta";
+	public static final String CHURN_WORKING_SET_DELTA_PROPERTY_DEFAULT = "1000";
+	int delta;
 
 	IntegerGenerator keysequence;
 
@@ -347,6 +358,8 @@ public class CoreWorkload extends Workload {
 					+ expectednewkeys);
 		} else if (requestdistrib.compareTo("latest") == 0) {
 			keychooser = new SkewedLatestGenerator(transactioninsertkeysequence);
+		}  else if (requestdistrib.compareTo("churn") == 0){
+			keychooser = new ChurnGenerator(workingset, delta);
 		} else {
 			throw new WorkloadException("Unknown distribution \""
 					+ requestdistrib + "\"");

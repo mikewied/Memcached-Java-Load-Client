@@ -654,7 +654,6 @@ public class Client {
 				System.out.println("Unknown DB " + dbname);
 				System.exit(0);
 			}
-			System.out.println(opcount);
 			Thread t = new ClientThread(db, dotransactions, workload, threadid,
 					threadcount, props, opcount / threadcount,
 					targetperthreadperms);

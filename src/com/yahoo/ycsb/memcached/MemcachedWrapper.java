@@ -64,6 +64,66 @@ public class MemcachedWrapper extends Memcached {
 		_db.cleanup();
 	}
 
+	@Override
+	public int add(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.add(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("ADD", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("ADD", res);
+		return res;
+	}
+
+	@Override
+	public int append(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.append(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("APPEND", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("APPEND", res);
+		return res;
+	}
+
+	@Override
+	public int cas(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.cas(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("CAS", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("CAS", res);
+		return res;
+	}
+
+	@Override
+	public int decr(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.decr(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("DECR", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("DECR", res);
+		return res;
+	}
+
+	@Override
+	public int delete(String key) {
+		long st = System.nanoTime();
+		int res = _db.delete(key);
+		long en = System.nanoTime();
+		_measurements.measure("DELETE", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("DELETE", res);
+		return res;
+	}
+
+	@Override
+	public int incr(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.incr(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("INCR", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("INCR", res);
+		return res;
+	}
+	
 	/**
 	 * Insert a record in the database. Any field/value pairs in the specified
 	 * values HashMap will be written into the record with the specified record
@@ -81,6 +141,36 @@ public class MemcachedWrapper extends Memcached {
 		long en = System.nanoTime();
 		_measurements.measure("GET", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("GET", res);
+		return res;
+	}
+
+	@Override
+	public int gets(String key) {
+		long st = System.nanoTime();
+		int res = _db.gets(key);
+		long en = System.nanoTime();
+		_measurements.measure("GETS", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("GETS", res);
+		return res;
+	}
+
+	@Override
+	public int prepend(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.prepend(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("PREPEND", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("PREPEND", res);
+		return res;
+	}
+
+	@Override
+	public int replace(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.replace(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("REPLACE", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("REPLACE", res);
 		return res;
 	}
 	

@@ -19,6 +19,7 @@ package com.yahoo.ycsb.workloads;
 
 import java.util.Properties;
 import com.yahoo.ycsb.*;
+import com.yahoo.ycsb.generator.ChurnGenerator;
 import com.yahoo.ycsb.generator.CounterGenerator;
 import com.yahoo.ycsb.generator.DiscreteGenerator;
 import com.yahoo.ycsb.generator.Generator;
@@ -131,26 +132,21 @@ public class MemcachedCoreWorkload extends Workload {
 	public static final String VALUE_LENGTH_PROPERTY_DEFAULT = "256";
 	int valuelength;
 	
+	// The size of the working set used by the churn generator
+	public static final String CHURN_WORKING_SET_PROPERTY = "workingset";
+	public static final String CHURN_WORKING_SET_PROPERTY_DEFAULT = System.getProperty(Client.RECORD_COUNT_PROPERTY, "0");
+	int workingset;
+	
+	// The amount of operations to do before evicting an item from the working set and adding a new one
+	public static final String CHURN_WORKING_SET_DELTA_PROPERTY = "churndelta";
+	public static final String CHURN_WORKING_SET_DELTA_PROPERTY_DEFAULT = "1000";
+	int delta;
 	
 	
 	
 	
 	
 	
-	
-	
-
-	/**
-	 * The name of the database table to run queries against.
-	 */
-	public static final String TABLENAME_PROPERTY = "table";
-
-	/**
-	 * The default name of the database table to run queries against.
-	 */
-	public static final String TABLENAME_PROPERTY_DEFAULT = "usertable";
-
-	public static String table;
 
 	/**
 	 * The name of the property for the number of fields in a record.
@@ -163,32 +159,6 @@ public class MemcachedCoreWorkload extends Workload {
 	public static final String FIELD_COUNT_PROPERTY_DEFAULT = "10";
 
 	int fieldcount;
-
-	/**
-	 * The name of the property for deciding whether to read one field (false)
-	 * or all fields (true) of a record.
-	 */
-	public static final String READ_ALL_FIELDS_PROPERTY = "readallfields";
-
-	/**
-	 * The default value for the readallfields property.
-	 */
-	public static final String READ_ALL_FIELDS_PROPERTY_DEFAULT = "true";
-
-	boolean readallfields;
-
-	/**
-	 * The name of the property for deciding whether to write one field (false)
-	 * or all fields (true) of a record.
-	 */
-	public static final String WRITE_ALL_FIELDS_PROPERTY = "writeallfields";
-
-	/**
-	 * The default value for the writeallfields property.
-	 */
-	public static final String WRITE_ALL_FIELDS_PROPERTY_DEFAULT = "false";
-
-	boolean writeallfields;
 
 	/**
 	 * The name of the property for the the distribution of requests across the
@@ -254,19 +224,29 @@ public class MemcachedCoreWorkload extends Workload {
 	 * any operations are started.
 	 */
 	public void init(Properties p) throws WorkloadException {
-		table = p.getProperty(TABLENAME_PROPERTY, TABLENAME_PROPERTY_DEFAULT);
 		fieldcount = Integer.parseInt(p.getProperty(FIELD_COUNT_PROPERTY, FIELD_COUNT_PROPERTY_DEFAULT));
 		valuelength = Integer.parseInt(p.getProperty(VALUE_LENGTH_PROPERTY, VALUE_LENGTH_PROPERTY_DEFAULT));
-		double getproportion = Double.parseDouble(p.getProperty(GET_PROPORTION_PROPERTY, GET_PROPORTION_PROPERTY_DEFAULT));
-		double setproportion = Double.parseDouble(p.getProperty(SET_PROPORTION_PROPERTY, SET_PROPORTION_PROPERTY_DEFAULT));
+		
+		addproportion = Double.parseDouble(p.getProperty(ADD_PROPORTION_PROPERTY, ADD_PROPORTION_PROPERTY_DEFAULT));
+		appendproportion = Double.parseDouble(p.getProperty(APPEND_PROPORTION_PROPERTY, APPEND_PROPORTION_PROPERTY_DEFAULT));
+		casproportion = Double.parseDouble(p.getProperty(CAS_PROPORTION_PROPERTY, CAS_PROPORTION_PROPERTY_DEFAULT));
+		decrproportion = Double.parseDouble(p.getProperty(DECR_PROPORTION_PROPERTY, DECR_PROPORTION_PROPERTY_DEFAULT));
+		deleteproportion = Double.parseDouble(p.getProperty(DELETE_PROPORTION_PROPERTY, DELETE_PROPORTION_PROPERTY_DEFAULT));
+		getproportion = Double.parseDouble(p.getProperty(GET_PROPORTION_PROPERTY, GET_PROPORTION_PROPERTY_DEFAULT));
+		getsproportion = Double.parseDouble(p.getProperty(GETS_PROPORTION_PROPERTY, GETS_PROPORTION_PROPERTY_DEFAULT));
+		incrproportion = Double.parseDouble(p.getProperty(INCR_PROPORTION_PROPERTY, INCR_PROPORTION_PROPERTY_DEFAULT));
+		prependproportion = Double.parseDouble(p.getProperty(PREPEND_PROPORTION_PROPERTY, PREPEND_PROPORTION_PROPERTY_DEFAULT));
+		replaceproportion = Double.parseDouble(p.getProperty(REPLACE_PROPORTION_PROPERTY, REPLACE_PROPORTION_PROPERTY_DEFAULT));
+		setproportion = Double.parseDouble(p.getProperty(SET_PROPORTION_PROPERTY, SET_PROPORTION_PROPERTY_DEFAULT));
+		
+		workingset = Integer.parseInt(p.getProperty(CHURN_WORKING_SET_PROPERTY, CHURN_WORKING_SET_PROPERTY_DEFAULT));
+		delta = Integer.parseInt(p.getProperty(CHURN_WORKING_SET_DELTA_PROPERTY, CHURN_WORKING_SET_DELTA_PROPERTY_DEFAULT));
 		recordcount = Integer.parseInt(p.getProperty(Client.RECORD_COUNT_PROPERTY));
 		String requestdistrib = p.getProperty(REQUEST_DISTRIBUTION_PROPERTY, REQUEST_DISTRIBUTION_PROPERTY_DEFAULT);
 		int maxscanlength = Integer.parseInt(p.getProperty( MAX_SCAN_LENGTH_PROPERTY, MAX_SCAN_LENGTH_PROPERTY_DEFAULT));
 		String scanlengthdistrib = p.getProperty(SCAN_LENGTH_DISTRIBUTION_PROPERTY, SCAN_LENGTH_DISTRIBUTION_PROPERTY_DEFAULT);
 		int insertstart = Integer.parseInt(p.getProperty(INSERT_START_PROPERTY, INSERT_START_PROPERTY_DEFAULT));
 		keyprefix = p.getProperty(KEY_PREFIX_PROPERTY, KEY_PREFIX_PROPERTY_DEFAULT);
-		readallfields = Boolean.parseBoolean(p.getProperty(READ_ALL_FIELDS_PROPERTY, READ_ALL_FIELDS_PROPERTY_DEFAULT));
-		writeallfields = Boolean.parseBoolean(p.getProperty(WRITE_ALL_FIELDS_PROPERTY, WRITE_ALL_FIELDS_PROPERTY_DEFAULT));
 
 		if (p.getProperty(INSERT_ORDER_PROPERTY, INSERT_ORDER_PROPERTY_DEFAULT)
 				.compareTo("hashed") == 0) {
@@ -277,16 +257,41 @@ public class MemcachedCoreWorkload extends Workload {
 
 		keysequence = new CounterGenerator(insertstart);
 		operationchooser = new DiscreteGenerator();
+		
+		if (addproportion > 0) {
+			operationchooser.addValue(addproportion, "ADD");
+		}
+		if (appendproportion > 0) {
+			operationchooser.addValue(appendproportion, "APPEND");
+		}
+		if (casproportion > 0) {
+			operationchooser.addValue(casproportion, "CAS");
+		}
+		if (decrproportion > 0) {
+			operationchooser.addValue(decrproportion, "DECR");
+		}
+		if (deleteproportion > 0) {
+			operationchooser.addValue(deleteproportion, "DELETE");
+		}
 		if (getproportion > 0) {
 			operationchooser.addValue(getproportion, "GET");
 		}
-		
+		if (getsproportion > 0) {
+			operationchooser.addValue(getsproportion, "GETS");
+		}
+		if (incrproportion > 0) {
+			operationchooser.addValue(incrproportion, "INCR");
+		}
+		if (prependproportion > 0) {
+			operationchooser.addValue(prependproportion, "PREPEND");
+		}
+		if (replaceproportion > 0) {
+			operationchooser.addValue(replaceproportion, "REPLACE");
+		}
 		if (setproportion > 0) {
 			operationchooser.addValue(setproportion, "SET");
 		}
 		
-		
-
 		transactioninsertkeysequence = new CounterGenerator(recordcount);
 		if (requestdistrib.compareTo("uniform") == 0) {
 			keychooser = new UniformIntegerGenerator(0, recordcount - 1);
@@ -305,20 +310,16 @@ public class MemcachedCoreWorkload extends Workload {
 			// keyspace doesn't change from the perspective of the scrambled
 			// zipfian generator
 
-			int opcount = Integer.parseInt(p
-					.getProperty(Client.OPERATION_COUNT_PROPERTY));
-			int expectednewkeys = (int) (((double) opcount) * setproportion * 2.0); // 2
-																						// is
-																						// fudge
-																						// factor
+			int opcount = Integer.parseInt(p.getProperty(Client.OPERATION_COUNT_PROPERTY));
+			int expectednewkeys = (int) (((double) opcount) * setproportion * 2.0); // 2 is fudge factor
 
-			keychooser = new ScrambledZipfianGenerator(recordcount
-					+ expectednewkeys);
+			keychooser = new ScrambledZipfianGenerator(recordcount + expectednewkeys);
 		} else if (requestdistrib.compareTo("latest") == 0) {
 			keychooser = new SkewedLatestGenerator(transactioninsertkeysequence);
+		} else if (requestdistrib.compareTo("churn") == 0){
+			keychooser = new ChurnGenerator(workingset, delta);
 		} else {
-			throw new WorkloadException("Unknown distribution \""
-					+ requestdistrib + "\"");
+			throw new WorkloadException("Unknown distribution \"" + requestdistrib + "\"");
 		}
 
 		fieldchooser = new UniformIntegerGenerator(0, fieldcount - 1);
@@ -328,8 +329,7 @@ public class MemcachedCoreWorkload extends Workload {
 		} else if (scanlengthdistrib.compareTo("zipfian") == 0) {
 			scanlength = new ZipfianGenerator(1, maxscanlength);
 		} else {
-			throw new WorkloadException("Distribution \"" + scanlengthdistrib
-					+ "\" not allowed for scan length");
+			throw new WorkloadException("Distribution \"" + scanlengthdistrib + "\" not allowed for scan length");
 		}
 	}
 
@@ -364,13 +364,58 @@ public class MemcachedCoreWorkload extends Workload {
 	public boolean doTransaction(DataStore memcached, Object threadstate) {
 		String op = operationchooser.nextString();
 
-		if (op.compareTo("GET") == 0) {
+		if (op.compareTo("ADD") == 0) {
+			doTransactionAdd((Memcached)memcached);
+		} else if (op.compareTo("APPEND") == 0) {
+			doTransactionAppend((Memcached)memcached);
+		} else if (op.compareTo("CAS") == 0) {
+			doTransactionCas((Memcached)memcached);
+		} else if (op.compareTo("DECR") == 0) {
+			doTransactionDecr((Memcached)memcached);
+		} else if (op.compareTo("DELETE") == 0) {
+			doTransactionDelete((Memcached)memcached);
+		} else if (op.compareTo("GET") == 0) {
 			doTransactionGet((Memcached)memcached);
+		} else if (op.compareTo("GETS") == 0) {
+			doTransactionGets((Memcached)memcached);
+		} else if (op.compareTo("INCR") == 0) {
+			doTransactionIncr((Memcached)memcached);
+		} else if (op.compareTo("PREPEND") == 0) {
+			doTransactionPrepend((Memcached)memcached);
+		} else if (op.compareTo("Replace") == 0) {
+			doTransactionReplace((Memcached)memcached);
 		} else if (op.compareTo("SET") == 0) {
 			doTransactionSet((Memcached)memcached);
 		}
 
 		return true;
+	}
+	
+	public void doTransactionAdd(Memcached memcached) {
+		// choose the next key
+		int keynum = transactioninsertkeysequence.nextInt();
+		if (!orderedinserts) {
+			keynum = Utils.hash(keynum);
+		}
+		String dbkey = keyprefix + keynum;
+		String value = Utils.ASCIIString(valuelength);
+		memcached.add(dbkey, value);
+	}
+	
+	public void doTransactionAppend(Memcached memcached) {
+		
+	}
+	
+	public void doTransactionCas(Memcached memcached) {
+		
+	}
+	
+	public void doTransactionDecr(Memcached memcached) {
+		
+	}
+	
+	public void doTransactionDelete(Memcached memcached) {
+		
 	}
 
 	public void doTransactionGet(Memcached memcached) {
@@ -386,6 +431,22 @@ public class MemcachedCoreWorkload extends Workload {
 		String keyname = "user" + keynum;
 
 		memcached.get(keyname, null);
+	}
+	
+	public void doTransactionGets(Memcached memcached) {
+		
+	}
+	
+	public void doTransactionIncr(Memcached memcached) {
+		
+	}
+	
+	public void doTransactionPrepend(Memcached memcached) {
+		
+	}
+	
+	public void doTransactionReplace(Memcached memcached) {
+		
 	}
 	
 	public void doTransactionSet(Memcached memcached) {

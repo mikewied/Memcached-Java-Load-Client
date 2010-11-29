@@ -8,7 +8,6 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import net.spy.memcached.MemcachedClient;
 
@@ -44,11 +43,9 @@ public class SpymemcachedClient extends Memcached {
 		String addr = getProperties().getProperty("memcached.address");
 		try {
 			client = new MemcachedClient(new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), 11211));
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -65,13 +62,25 @@ public class SpymemcachedClient extends Memcached {
 		}
 	}
 	
+	@Override
+	public int add(String key, Object value) {
+		try {
+			if (!client.add(key, 0, value).get().booleanValue())
+				return -1;
+		} catch (InterruptedException e) {
+			System.out.println("ADD Interrupted");
+		} catch (ExecutionException e) {
+			System.out.println("ADD Execution");
+		} catch (RuntimeException e) {
+			System.out.println("ADD Runtime");
+		}
+		return 0;
+	}
 	
 	@Override
-	public int get(String key, Object value) {
-		//System.out.println("GET " + key);
-		Future<Object> success = client.asyncGet(key);		
+	public int get(String key, Object value) {	
 		try {
-			if (success.get() == null) {
+			if (client.asyncGet(key).get() == null) {
 				System.out.println("Error");
 				return -1;
 			}
@@ -87,7 +96,6 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int set(String key, Object value) {
-		//System.out.println("SET " + key);
 		try {
 			if (!client.set(key, 0, value).get().booleanValue())
 				return -1;
@@ -100,14 +108,7 @@ public class SpymemcachedClient extends Memcached {
 		}
 		return 0;
 	}
-/*
-	@Override
-	public int delete(String table, String key) {
-		// TODO Auto-generated method stub
-		System.out.println("Delete");
-		return 0;
-	}
-	*/
+	
 	private byte[] ipv4AddressToByte(String address) {
 		byte[] b = new byte[4];
 		String[] str = address.split("\\.");
@@ -116,6 +117,54 @@ public class SpymemcachedClient extends Memcached {
 		b[2] = Integer.valueOf(str[2]).byteValue();
 		b[3] = Integer.valueOf(str[3]).byteValue();
 		return b;
+	}
+
+	@Override
+	public int append(String key, Object value) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int cas(String key, Object value) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int decr(String key, Object value) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int delete(String key) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int incr(String key, Object value) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int gets(String key) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int prepend(String key, Object value) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int replace(String key, Object value) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

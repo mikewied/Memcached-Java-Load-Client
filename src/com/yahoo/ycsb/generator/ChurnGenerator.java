@@ -17,17 +17,27 @@
 
 package com.yahoo.ycsb.generator;
 
+import java.util.Random;
+
 /**
  * Generate a popularity distribution of items, skewed to favor recent items
  * significantly more than older items.
  */
 public class ChurnGenerator extends IntegerGenerator {
-	CounterGenerator _basis;
-	ZipfianGenerator _zipfian;
+	Random _r;
+	int workingsetsize;
+	int workingsetdelta;
+	int workingSetLo;
+	int workingSetHi;
+	int ops;
 
-	public ChurnGenerator(CounterGenerator basis) {
-		_basis = basis;
-		_zipfian = new ZipfianGenerator(Integer.parseInt(_basis.lastString()));
+	public ChurnGenerator(int workingsetsize, int workingsetdelta) {
+		_r = new Random();
+		this.workingsetsize = workingsetsize;
+		this.workingsetdelta = workingsetdelta;
+		workingSetLo = 0;
+		workingSetHi = workingsetsize;
+		ops = 0;
 		nextInt();
 	}
 
@@ -36,19 +46,24 @@ public class ChurnGenerator extends IntegerGenerator {
 	 * items most recently returned by the basis generator.
 	 */
 	public int nextInt() {
-		int max = Integer.parseInt(_basis.lastString());
-		int nextint = max - _zipfian.nextInt(max);
-		setLastInt(nextint);
-		return nextint;
+		if (ops > workingsetdelta) {
+			ops = 0;
+			workingSetLo++;
+			workingSetHi++;
+		}
+		int relvalue = _r.nextInt(workingsetsize);
+		ops++;
+		return (workingSetLo + relvalue) % 50;
 	}
 
 	public static void main(String[] args) {
-		SkewedLatestGenerator gen = new SkewedLatestGenerator(
-				new CounterGenerator(1000));
+		int[] keys = new int[50];
+		ChurnGenerator gen = new ChurnGenerator(5, 1000);
 		for (int i = 0; i < Integer.parseInt(args[0]); i++) {
-			System.out.println(gen.nextString());
+			keys[Integer.parseInt(gen.nextString())]++;
 		}
-
+		for (int i = 0; i < keys.length; i++) {
+			System.out.println(i + ": " + keys[i]);
+		}
 	}
-
 }

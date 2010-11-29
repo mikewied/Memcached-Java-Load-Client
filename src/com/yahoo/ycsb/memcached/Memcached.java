@@ -43,12 +43,83 @@ import com.yahoo.ycsb.DataStore;
 public abstract class Memcached extends DataStore{
 
 	/**
-	 * Insert a record in the database. Any field/value pairs in the specified
-	 * values HashMap will be written into the record with the specified record
-	 * key.
+	 * Add a value in the database. Any key/value pair in the specified
+	 * value Object will be added as a value to a specific key.
 	 * 
 	 * @param key
-	 *            The record key of the record to get.
+	 *            The key of the value to add.
+	 * @param value
+	 *            An Object to use as the key's value
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int add(String key, Object value);
+	
+	/**
+	 * Append a value in the database. Any key/value pair in the specified
+	 * value Object will be appended onto the value with the specified key.
+	 * 
+	 * @param key
+	 *            The key of the value to be appended to.
+	 * @param value
+	 *            An Object to use as the key's value
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int append(String key, Object value);
+	
+	/**
+	 * Decrement a value in the database.
+	 * 
+	 * @param key
+	 *            The key of the value to be decremented.
+	 * @param value
+	 *            An Object to use as the key's value
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int cas(String key, Object value);
+	
+	/**
+	 * Decrement a value in the database.
+	 * 
+	 * @param key
+	 *            The key of the value to be decremented.
+	 * @param value
+	 *            An Object to use as the key's value
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int decr(String key, Object value);
+	
+	/**
+	 * Delete a value from the database.
+	 * 
+	 * @param key
+	 *            The key of the value to be deleted.
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int delete(String key);
+	
+	/**
+	 * Decrement a value in the database.
+	 * 
+	 * @param key
+	 *            The key of the value to be decremented.
+	 * @param value
+	 *            An Object to use as the key's value
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int incr(String key, Object value);
+	
+	/**
+	 * Get a value from the database. Any key/value pair in the specified
+	 * value Object will be check against the value returned from the database.
+	 * 
+	 * @param key
+	 *            The key of the value to get.
 	 * @param value
 	 *            The Object that the key should contain
 	 * @return Zero on success, a non-zero error code on error. See this class's
@@ -57,12 +128,50 @@ public abstract class Memcached extends DataStore{
 	public abstract int get(String key, Object value);
 	
 	/**
-	 * Insert a record in the database. Any field/value pairs in the specified
-	 * values HashMap will be written into the record with the specified record
-	 * key.
+	 * Get a value from the database. Any key/value pair in the specified
+	 * value Object will be check against the value returned from the database.
 	 * 
 	 * @param key
-	 *            The record key of the record to insert.
+	 *            The key of the value to get.
+	 * @param value
+	 *            The Object that the key should contain
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int gets(String key);
+	
+	/**
+	 * Get a value from the database. Any key/value pair in the specified
+	 * value Object will be check against the value returned from the database.
+	 * 
+	 * @param key
+	 *            The key of the value to get.
+	 * @param value
+	 *            The Object that the key should contain
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int prepend(String key, Object value);
+	
+	/**
+	 * Get a value from the database. Any key/value pair in the specified
+	 * value Object will be check against the value returned from the database.
+	 * 
+	 * @param key
+	 *            The key of the value to get.
+	 * @param value
+	 *            The Object that the key should contain
+	 * @return Zero on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract int replace(String key, Object value);
+	
+	/**
+	 * Set a record in the database. Any key/value pair in the specified
+	 * values Object will be written into the key with the specified value.
+	 * 
+	 * @param key
+	 *            The key of the value to insert.
 	 * @param value
 	 *            An Object to use as the key's value
 	 * @return Zero on success, a non-zero error code on error. See this class's

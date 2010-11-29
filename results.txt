@@ -1,2 +1,0 @@
-[OVERALL], RunTime(ms), 321.0
-[OVERALL], Throughput(ops/sec), 31152.64797507788
