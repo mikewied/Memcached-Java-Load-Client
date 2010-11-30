@@ -38,9 +38,11 @@ readproportion=0.95
 updateproportion=0
 scanproportion=0
 
-memaddproportion=0.05
-memgetproportion=0.90
-memsetproportion=0.05
+memaddproportion=0.01
+memgetproportion=0.88
+memsetproportion=0.01
+memappendproportion=0.05
+memprependproportion=0.05
 
 workingset=1000
 churndelta=2000

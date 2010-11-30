@@ -75,9 +75,9 @@ public class MemcachedWrapper extends Memcached {
 	}
 
 	@Override
-	public int append(String key, Object value) {
+	public int append(String key, long cas, Object value) {
 		long st = System.nanoTime();
-		int res = _db.append(key, value);
+		int res = _db.append(key, cas, value);
 		long en = System.nanoTime();
 		_measurements.measure("APPEND", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("APPEND", res);
@@ -145,22 +145,25 @@ public class MemcachedWrapper extends Memcached {
 	}
 
 	@Override
-	public int gets(String key) {
+	public long gets(String key) {
 		long st = System.nanoTime();
-		int res = _db.gets(key);
+		long res = _db.gets(key);
 		long en = System.nanoTime();
 		_measurements.measure("GETS", (int) ((en - st) / 1000));
-		_measurements.reportReturnCode("GETS", res);
+		if (res > 0)
+			_measurements.reportReturnCode("GETS", 0);
+		else
+			_measurements.reportReturnCode("GETS", -1);
 		return res;
 	}
 
 	@Override
-	public int prepend(String key, Object value) {
+	public int prepend(String key, long cas, Object value) {
 		long st = System.nanoTime();
-		int res = _db.prepend(key, value);
+		int res = _db.prepend(key, cas, value);
 		long en = System.nanoTime();
 		_measurements.measure("PREPEND", (int) ((en - st) / 1000));
-		_measurements.reportReturnCode("PREPEND", res);
+		_measurements.reportReturnCode("PREPEND", 0);
 		return res;
 	}
 

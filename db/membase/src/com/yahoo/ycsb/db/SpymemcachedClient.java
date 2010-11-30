@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
+import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedClient;
 
 import com.yahoo.ycsb.memcached.Memcached;
@@ -120,8 +121,17 @@ public class SpymemcachedClient extends Memcached {
 	}
 
 	@Override
-	public int append(String key, Object value) {
-		// TODO Auto-generated method stub
+	public int append(String key, long cas, Object value) {
+		try {
+			if (!client.append(cas, key, value).get().booleanValue())
+				return -1;
+		} catch (InterruptedException e) {
+			System.out.println("APPEND Interrupted");
+		} catch (ExecutionException e) {
+			System.out.println("APPEND Execution");
+		} catch (RuntimeException e) {
+			System.out.println("APPEND Runtime");
+		}
 		return 0;
 	}
 
@@ -150,14 +160,26 @@ public class SpymemcachedClient extends Memcached {
 	}
 
 	@Override
-	public int gets(String key) {
-		// TODO Auto-generated method stub
-		return 0;
+	public long gets(String key) {
+		long cas = client.gets(key).getCas();
+		if (cas < 0)
+			return -1;
+		return cas;
 	}
 
 	@Override
-	public int prepend(String key, Object value) {
-		// TODO Auto-generated method stub
+	public int prepend(String key, long cas, Object value) {
+		System.out.println("Prepend");
+		try {
+			if (!client.prepend(cas, key, value).get().booleanValue())
+				return -1;
+		} catch (InterruptedException e) {
+			System.out.println("PREPEND Interrupted");
+		} catch (ExecutionException e) {
+			System.out.println("PREPEND Execution");
+		} catch (RuntimeException e) {
+			System.out.println("PREPEND Runtime");
+		}
 		return 0;
 	}
 

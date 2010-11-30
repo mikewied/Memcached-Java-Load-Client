@@ -47,7 +47,7 @@ public abstract class Memcached extends DataStore{
 	 * value Object will be added as a value to a specific key.
 	 * 
 	 * @param key
-	 *            The key of the value to add.
+	 *            The key of the value to add.          		
 	 * @param value
 	 *            An Object to use as the key's value
 	 * @return Zero on success, a non-zero error code on error. See this class's
@@ -61,18 +61,20 @@ public abstract class Memcached extends DataStore{
 	 * 
 	 * @param key
 	 *            The key of the value to be appended to.
+	 * @param cas
+	 * 			  The cas value needed to do the append 
 	 * @param value
 	 *            An Object to use as the key's value
 	 * @return Zero on success, a non-zero error code on error. See this class's
 	 *         description for a discussion of error codes.
 	 */
-	public abstract int append(String key, Object value);
+	public abstract int append(String key, long cas, Object value);
 	
 	/**
-	 * Decrement a value in the database.
+	 * Does a Create and store operation.
 	 * 
 	 * @param key
-	 *            The key of the value to be decremented.
+	 *            The key of the value to do the cas.
 	 * @param value
 	 *            An Object to use as the key's value
 	 * @return Zero on success, a non-zero error code on error. See this class's
@@ -103,10 +105,10 @@ public abstract class Memcached extends DataStore{
 	public abstract int delete(String key);
 	
 	/**
-	 * Decrement a value in the database.
+	 * Increment a value in the database.
 	 * 
 	 * @param key
-	 *            The key of the value to be decremented.
+	 *            The key of the value to be incremented.
 	 * @param value
 	 *            An Object to use as the key's value
 	 * @return Zero on success, a non-zero error code on error. See this class's
@@ -128,39 +130,34 @@ public abstract class Memcached extends DataStore{
 	public abstract int get(String key, Object value);
 	
 	/**
-	 * Get a value from the database. Any key/value pair in the specified
-	 * value Object will be check against the value returned from the database.
+	 * Get a CAS identifier for a value in the database
 	 * 
 	 * @param key
-	 *            The key of the value to get.
+	 *            The key of the value to get a CAS identifier for
+	 * @return The CAS identifier on success, a non-zero error code on error. See this class's
+	 *         description for a discussion of error codes.
+	 */
+	public abstract long gets(String key);
+	
+	/**
+	 * Prepends a value to a specific keys current value
+	 * 
+	 * @param key
+	 *            The key of the value to prepend.
 	 * @param value
-	 *            The Object that the key should contain
+	 *            The Object to prepend to the current key
 	 * @return Zero on success, a non-zero error code on error. See this class's
 	 *         description for a discussion of error codes.
 	 */
-	public abstract int gets(String key);
+	public abstract int prepend(String key, long cas, Object value);
 	
 	/**
-	 * Get a value from the database. Any key/value pair in the specified
-	 * value Object will be check against the value returned from the database.
+	 * Replaces the current value of a key if the key already exists
 	 * 
 	 * @param key
-	 *            The key of the value to get.
+	 *            The key of the value to replace.
 	 * @param value
-	 *            The Object that the key should contain
-	 * @return Zero on success, a non-zero error code on error. See this class's
-	 *         description for a discussion of error codes.
-	 */
-	public abstract int prepend(String key, Object value);
-	
-	/**
-	 * Get a value from the database. Any key/value pair in the specified
-	 * value Object will be check against the value returned from the database.
-	 * 
-	 * @param key
-	 *            The key of the value to get.
-	 * @param value
-	 *            The Object that the key should contain
+	 *            The Object to replace the old value with
 	 * @return Zero on success, a non-zero error code on error. See this class's
 	 *         description for a discussion of error codes.
 	 */

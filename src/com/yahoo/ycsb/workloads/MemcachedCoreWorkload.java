@@ -403,7 +403,17 @@ public class MemcachedCoreWorkload extends Workload {
 	}
 	
 	public void doTransactionAppend(Memcached memcached) {
-		
+		int keynum;
+		do {
+			keynum = keychooser.nextInt();
+		} while (keynum > transactioninsertkeysequence.lastInt());
+
+		if (!orderedinserts) {
+			keynum = Utils.hash(keynum);
+		}
+		String key = "user" + keynum;
+		long cas = memcached.gets(key);
+		memcached.append(key, cas, "appended_string");
 	}
 	
 	public void doTransactionCas(Memcached memcached) {
@@ -419,7 +429,6 @@ public class MemcachedCoreWorkload extends Workload {
 	}
 
 	public void doTransactionGet(Memcached memcached) {
-		// choose a random key
 		int keynum;
 		do {
 			keynum = keychooser.nextInt();
@@ -433,8 +442,16 @@ public class MemcachedCoreWorkload extends Workload {
 		memcached.get(keyname, null);
 	}
 	
-	public void doTransactionGets(Memcached memcached) {
-		
+	public long doTransactionGets(Memcached memcached) {
+		int keynum;
+		do {
+			keynum = keychooser.nextInt();
+		} while (keynum > transactioninsertkeysequence.lastInt());
+
+		if (!orderedinserts) {
+			keynum = Utils.hash(keynum);
+		}
+		return memcached.gets("user" + keynum);
 	}
 	
 	public void doTransactionIncr(Memcached memcached) {
@@ -442,7 +459,17 @@ public class MemcachedCoreWorkload extends Workload {
 	}
 	
 	public void doTransactionPrepend(Memcached memcached) {
-		
+		int keynum;
+		do {
+			keynum = keychooser.nextInt();
+		} while (keynum > transactioninsertkeysequence.lastInt());
+
+		if (!orderedinserts) {
+			keynum = Utils.hash(keynum);
+		}
+		String key = "user" + keynum;
+		long cas = memcached.gets(key);
+		memcached.prepend(key, cas, "prepended_string");
 	}
 	
 	public void doTransactionReplace(Memcached memcached) {
