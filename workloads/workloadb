@@ -28,7 +28,7 @@ memcached.verbose=false
 histogram.buckets=20
 exportfile=results.txt
 recordcount=10000
-operationcount=10000
+operationcount=100000
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
 readallfields=true
@@ -38,16 +38,20 @@ readproportion=0.95
 updateproportion=0
 scanproportion=0
 
-memaddproportion=0.01
-memgetproportion=0.88
-memsetproportion=0.01
-memappendproportion=0.05
-memprependproportion=0.05
+#memaddproportion=0.05
+memgetproportion=0.70
+memsetproportion=0.05
+#memappendproportion=0.05
+#memprependproportion=0.05
+#memreplaceproportion=0.05
+#memcasproportion=0.05
 
-workingset=1000
-churndelta=2000
+workingset=10000
+churndelta=100000
+
+printstatsinterval=5
 
 requestdistribution=churn
 
-threadcount=1
+threadcount=5
 #target=10000

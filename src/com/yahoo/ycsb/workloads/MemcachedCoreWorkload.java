@@ -382,7 +382,7 @@ public class MemcachedCoreWorkload extends Workload {
 			doTransactionIncr((Memcached)memcached);
 		} else if (op.compareTo("PREPEND") == 0) {
 			doTransactionPrepend((Memcached)memcached);
-		} else if (op.compareTo("Replace") == 0) {
+		} else if (op.compareTo("REPLACE") == 0) {
 			doTransactionReplace((Memcached)memcached);
 		} else if (op.compareTo("SET") == 0) {
 			doTransactionSet((Memcached)memcached);
@@ -417,7 +417,18 @@ public class MemcachedCoreWorkload extends Workload {
 	}
 	
 	public void doTransactionCas(Memcached memcached) {
-		
+		int keynum;
+		do {
+			keynum = keychooser.nextInt();
+		} while (keynum > transactioninsertkeysequence.lastInt());
+
+		if (!orderedinserts) {
+			keynum = Utils.hash(keynum);
+		}
+		String key = "user" + keynum;
+		long cas = memcached.gets(key);
+		String value = Utils.ASCIIString(valuelength);
+		memcached.cas(key, cas, value);
 	}
 	
 	public void doTransactionDecr(Memcached memcached) {
@@ -473,7 +484,17 @@ public class MemcachedCoreWorkload extends Workload {
 	}
 	
 	public void doTransactionReplace(Memcached memcached) {
-		
+		int keynum;
+		do {
+			keynum = keychooser.nextInt();
+		} while (keynum > transactioninsertkeysequence.lastInt());
+
+		if (!orderedinserts) {
+			keynum = Utils.hash(keynum);
+		}
+		String key = "user" + keynum;
+		String value = Utils.ASCIIString(valuelength);
+		memcached.replace(key, value);
 	}
 	
 	public void doTransactionSet(Memcached memcached) {

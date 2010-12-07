@@ -64,7 +64,15 @@ public class MemcachedWrapper extends Memcached {
 		_db.cleanup();
 	}
 
-	@Override
+	/**
+	 * Adds a keys value in the database if the key doesn't already exist
+	 * 
+	 * @param key
+	 *            The key to add to the database
+	 * @param value
+	 *            The Object that will be the value of the key
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int add(String key, Object value) {
 		long st = System.nanoTime();
 		int res = _db.add(key, value);
@@ -74,7 +82,17 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
+	/**
+	 * Appends a value to a keys current value
+	 * 
+	 * @param key
+	 *            The key who's value will be appended.
+	 * @param
+	 * 			  The unique cas value to do the append with
+	 * @param value
+	 *            The Object to append to the end of the keys current value
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int append(String key, long cas, Object value) {
 		long st = System.nanoTime();
 		int res = _db.append(key, cas, value);
@@ -84,17 +102,35 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
-	public int cas(String key, Object value) {
+	/**
+	 * Stores a new value if the operation has the correct cas value
+	 * 
+	 * @param key
+	 *            The key whose value will be replace in the database
+	 * @param cas
+	 * 			  The unique cas value to do the operation with
+	 * @param value
+	 *            The Object to replace the keys old value with.
+	 * @return Zero on success, a non-zero error code on error
+	 */
+	public int cas(String key, long cas, Object value) {
 		long st = System.nanoTime();
-		int res = _db.cas(key, value);
+		int res = _db.cas(key, cas, value);
 		long en = System.nanoTime();
 		_measurements.measure("CAS", (int) ((en - st) / 1000));
 		_measurements.reportReturnCode("CAS", res);
 		return res;
 	}
 
-	@Override
+	/**
+	 * Decrement a keys value in the database
+	 * 
+	 * @param key
+	 *            The key whose value will be decremented
+	 * @param value
+	 *            The Object that the key should contain after decrementing
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int decr(String key, Object value) {
 		long st = System.nanoTime();
 		int res = _db.decr(key, value);
@@ -104,7 +140,13 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
+	/**
+	 * Delete a key from the database
+	 * 
+	 * @param key
+	 *            The key to delete
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int delete(String key) {
 		long st = System.nanoTime();
 		int res = _db.delete(key);
@@ -114,7 +156,15 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
+	/**
+	 * Increment a keys value in the database
+	 * 
+	 * @param key
+	 *            The key whose value will be incremented
+	 * @param value
+	 *            The Object that the key should contain after incrementing
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int incr(String key, Object value) {
 		long st = System.nanoTime();
 		int res = _db.incr(key, value);
@@ -125,12 +175,10 @@ public class MemcachedWrapper extends Memcached {
 	}
 	
 	/**
-	 * Insert a record in the database. Any field/value pairs in the specified
-	 * values HashMap will be written into the record with the specified record
-	 * key.
+	 * Get a key's value from the database.
 	 * 
 	 * @param key
-	 *            The record key of the record to get.
+	 *            The key to get a value for.
 	 * @param value
 	 *            The Object that the key should contain
 	 * @return Zero on success, a non-zero error code on error
@@ -144,7 +192,14 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
+	
+	/**
+	 * Gets a unique cas value for a key.
+	 * 
+	 * @param key
+	 *            The key to get a cas value for
+	 * @return The cas value on success, a non-zero error code on error
+	 */
 	public long gets(String key) {
 		long st = System.nanoTime();
 		long res = _db.gets(key);
@@ -157,7 +212,17 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
+	/**
+	 * Prepends a value to a keys current value
+	 * 
+	 * @param key
+	 *            The key who's value will be prepended.
+	 * @param
+	 * 			  The unique cas value to do the prepend with
+	 * @param value
+	 *            The Object to prepend to the front of the keys current value
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int prepend(String key, long cas, Object value) {
 		long st = System.nanoTime();
 		int res = _db.prepend(key, cas, value);
@@ -167,7 +232,16 @@ public class MemcachedWrapper extends Memcached {
 		return res;
 	}
 
-	@Override
+	/**
+	 * Replaces the value of a key already in the database. If a key doesn't
+	 * exist this operation fails.
+	 * 
+	 * @param key
+	 *            The key who's value will be replaced.
+	 * @param value
+	 *            The Object that will replace the old key value.
+	 * @return Zero on success, a non-zero error code on error
+	 */
 	public int replace(String key, Object value) {
 		long st = System.nanoTime();
 		int res = _db.replace(key, value);

@@ -167,5 +167,4 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
 		return "[" + getName() + " AverageLatency(ms)=" + d.format(report)
 				+ "]";
 	}
-
 }

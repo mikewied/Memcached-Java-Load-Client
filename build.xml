@@ -97,6 +97,7 @@
 	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
 		 <arg value="com.yahoo.ycsb.Client" />
 		 <arg value="-load" />
+	  	 <arg value="-s" />
 	  	 <arg value="-db" />
 	  	 <arg value="com.yahoo.ycsb.db.SpymemcachedClient" />
 		 <arg value="-P" />
@@ -110,6 +111,7 @@
 	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
 		 <arg value="com.yahoo.ycsb.Client" />
 		 <arg value="-t" />
+	  	 <arg value="-s" />
 	  	 <arg value="-db" />
 	  	 <arg value="com.yahoo.ycsb.db.SpymemcachedClient" />
 		 <arg value="-P" />

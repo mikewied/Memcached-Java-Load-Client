@@ -34,13 +34,13 @@ public class TextMeasurementsExporter implements MeasurementsExporter {
 
 	public void write(String metric, String measurement, int i)
 			throws IOException {
-		bw.write("[" + metric + "], " + measurement + ", " + i);
+		bw.write("[" + metric + "] " + measurement + ", " + i);
 		bw.newLine();
 	}
 
 	public void write(String metric, String measurement, double d)
 			throws IOException {
-		bw.write("[" + metric + "], " + measurement + ", " + d);
+		bw.write("[" + metric + "] " + measurement + ", " + d);
 		bw.newLine();
 	}
 

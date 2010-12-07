@@ -40,17 +40,19 @@ class StatusThread extends Thread {
 	Vector<Thread> _threads;
 	String _label;
 	boolean _standardstatus;
+	long _printstatsinterval;
 
 	/**
 	 * The interval for reporting status.
 	 */
-	public static final long sleeptime = 10000;
+	
 
 	public StatusThread(Vector<Thread> threads, String label,
-			boolean standardstatus) {
+			boolean standardstatus, long printstatsinterval) {
 		_threads = threads;
 		_label = label;
 		_standardstatus = standardstatus;
+		_printstatsinterval = printstatsinterval;
 	}
 
 	/**
@@ -93,30 +95,30 @@ class StatusThread extends Thread {
 
 			if (totalops == 0) {
 				System.err.println(_label + " " + (interval / 1000) + " sec: "
-						+ totalops + " operations; "
-						+ Measurements.getMeasurements().getSummary());
+						+ totalops + " operations;"
+						+ Measurements.getMeasurements().getSummary() + "\n");
 			} else {
 				System.err.println(_label + " " + (interval / 1000) + " sec: "
 						+ totalops + " operations; " + d.format(curthroughput)
-						+ " current ops/sec; "
-						+ Measurements.getMeasurements().getSummary());
+						+ " current ops/sec;"
+						+ Measurements.getMeasurements().getSummary() + "\n");
 			}
 
 			if (_standardstatus) {
 				if (totalops == 0) {
 					System.out.println(_label + " " + (interval / 1000)
-							+ " sec: " + totalops + " operations; "
-							+ Measurements.getMeasurements().getSummary());
+							+ " sec: " + totalops + " operations;"
+							+ Measurements.getMeasurements().getSummary() + "\n");
 				} else {
 					System.out.println(_label + " " + (interval / 1000)
 							+ " sec: " + totalops + " operations; "
-							+ d.format(curthroughput) + " current ops/sec; "
-							+ Measurements.getMeasurements().getSummary());
+							+ d.format(curthroughput) + " current ops/sec;"
+							+ Measurements.getMeasurements().getSummary() + "\n");
 				}
 			}
 
 			try {
-				sleep(sleeptime);
+				sleep(_printstatsinterval * 1000);
 			} catch (InterruptedException e) {
 				// do nothing
 			}
@@ -196,8 +198,7 @@ class ClientThread extends Thread {
 		}
 
 		try {
-			_workloadstate = _workload.initThread(_props, _threadid,
-					_threadcount);
+			_workloadstate = _workload.initThread(_props, _threadid, _threadcount);
 		} catch (WorkloadException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
@@ -313,6 +314,10 @@ public class Client {
 	 * property, which tells them which record to start at.
 	 */
 	public static final String INSERT_COUNT_PROPERTY = "insertcount";
+	
+	public static final String PRINT_STATS_INTERVAL = "printstatsinterval";
+	public static final String PRINT_STATS_INTERVAL_DEFAULT = "5";
+	static long printstatsinterval;
 
 	public static void usageMessage() {
 		System.out.println("Usage: java com.yahoo.ycsb.Client [options]");
@@ -661,7 +666,8 @@ public class Client {
 			threads.add(t);
 			// t.start();
 		}
-
+		
+		printstatsinterval = Long.parseLong(props.getProperty(PRINT_STATS_INTERVAL, PRINT_STATS_INTERVAL_DEFAULT));
 		StatusThread statusthread = null;
 
 		if (status) {
@@ -670,7 +676,7 @@ public class Client {
 					.compareTo("timeseries") == 0) {
 				standardstatus = true;
 			}
-			statusthread = new StatusThread(threads, label, standardstatus);
+			statusthread = new StatusThread(threads, label, standardstatus, printstatsinterval);
 			statusthread.start();
 		}
 

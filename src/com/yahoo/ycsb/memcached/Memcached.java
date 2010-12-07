@@ -75,12 +75,14 @@ public abstract class Memcached extends DataStore{
 	 * 
 	 * @param key
 	 *            The key of the value to do the cas.
+	 * @param cas
+	 * 			  The cas value needed to do the append 
 	 * @param value
 	 *            An Object to use as the key's value
 	 * @return Zero on success, a non-zero error code on error. See this class's
 	 *         description for a discussion of error codes.
 	 */
-	public abstract int cas(String key, Object value);
+	public abstract int cas(String key, long cas, Object value);
 	
 	/**
 	 * Decrement a value in the database.
@@ -156,6 +158,8 @@ public abstract class Memcached extends DataStore{
 	 * 
 	 * @param key
 	 *            The key of the value to replace.
+	 * @param cas
+	 * 			  The cas value needed to do the append 
 	 * @param value
 	 *            The Object to replace the old value with
 	 * @return Zero on success, a non-zero error code on error. See this class's

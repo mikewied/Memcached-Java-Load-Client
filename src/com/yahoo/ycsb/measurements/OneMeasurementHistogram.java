@@ -152,5 +152,4 @@ public class OneMeasurementHistogram extends OneMeasurement {
 		return "[" + getName() + " AverageLatency(ms)=" + d.format(report)
 				+ "]";
 	}
-
 }
