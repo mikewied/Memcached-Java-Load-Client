@@ -307,6 +307,8 @@ public class Client {
 	public static final String RECORD_COUNT_PROPERTY = "recordcount";
 
 	public static final String WORKLOAD_PROPERTY = "workload";
+	
+	public static final String PROTOCOL_PROPERTY = "protocol";
 
 	/**
 	 * Indicates how many inserts to do, if less than recordcount. Useful for
@@ -323,44 +325,28 @@ public class Client {
 	public static void usageMessage() {
 		System.out.println("Usage: java com.yahoo.ycsb.Client [options]");
 		System.out.println("Options:");
-		System.out
-				.println("  -threads n: execute using n threads (default: 1) - can also be specified as the \n"
-						+ "              \"threadcount\" property using -p");
-		System.out
-				.println("  -target n: attempt to do n operations per second (default: unlimited) - can also\n"
-						+ "             be specified as the \"target\" property using -p");
+		System.out.println("  -threads n: execute using n threads (default: 1) - can also be specified as the \n"
+						 + "              \"threadcount\" property using -p");
+		System.out.println("  -target n: attempt to do n operations per second (default: unlimited) - can also\n"
+						 + "             be specified as the \"target\" property using -p");
 		System.out.println("  -load:  run the loading phase of the workload");
-		System.out
-				.println("  -t:  run the transactions phase of the workload (default)");
-		System.out
-				.println("  -db dbname: specify the name of the DB to use (default: com.yahoo.ycsb.BasicDB) - \n"
-						+ "              can also be specified as the \"db\" property using -p");
-		System.out
-				.println("  -P propertyfile: load properties from the given file. Multiple files can");
-		System.out
-				.println("                   be specified, and will be processed in the order specified");
-		System.out
-				.println("  -p name=value:  specify a property to be passed to the DB and workloads;");
-		System.out
-				.println("                  multiple properties can be specified, and override any");
+		System.out.println("  -t:  run the transactions phase of the workload (default)");
+		System.out.println("  -db dbname: specify the name of the DB to use (default: com.yahoo.ycsb.BasicDB) - \n" 
+				         + "              can also be specified as the \"db\" property using -p");
+		System.out.println("  -P propertyfile: load properties from the given file. Multiple files can");
+		System.out.println("                   be specified, and will be processed in the order specified");
+		System.out.println("  -p name=value:  specify a property to be passed to the DB and workloads;");
+		System.out.println("                  multiple properties can be specified, and override any");
 		System.out.println("                  values in the propertyfile");
-		System.out
-				.println("  -s:  show status during run (default: no status)");
-		System.out
-				.println("  -l label:  use label for status (e.g. to label one experiment out of a whole batch)");
+		System.out.println("  -s:  show status during run (default: no status)");
+		System.out.println("  -l label:  use label for status (e.g. to label one experiment out of a whole batch)");
 		System.out.println("");
 		System.out.println("Required properties:");
-		System.out
-				.println("  "
-						+ WORKLOAD_PROPERTY
-						+ ": the name of the workload class to use (e.g. com.yahoo.ycsb.workloads.CoreWorkload)");
+		System.out.println("  " + WORKLOAD_PROPERTY + ": the name of the workload class to use (e.g. com.yahoo.ycsb.workloads.CoreWorkload)");
 		System.out.println("");
-		System.out
-				.println("To run the transaction phase from multiple servers, start a separate client on each.");
-		System.out
-				.println("To run the load phase from multiple servers, start a separate client on each; additionally,");
-		System.out
-				.println("use the \"insertcount\" and \"insertstart\" properties to divide up the records to be inserted");
+		System.out.println("To run the transaction phase from multiple servers, start a separate client on each.");
+		System.out.println("To run the load phase from multiple servers, start a separate client on each; additionally,");
+		System.out.println("use the \"insertcount\" and \"insertstart\" properties to divide up the records to be inserted");
 	}
 
 	public static boolean checkRequiredProperties(Properties props) {
@@ -368,7 +354,10 @@ public class Client {
 			System.out.println("Missing property: " + WORKLOAD_PROPERTY);
 			return false;
 		}
-
+		if (props.getProperty(PROTOCOL_PROPERTY) == null) {
+			System.out.println("Missing property: " + PROTOCOL_PROPERTY);
+			return false;
+		}
 		return true;
 	}
 
@@ -380,8 +369,7 @@ public class Client {
 	 *             Either failed to write to output stream or failed to close
 	 *             it.
 	 */
-	private static void exportMeasurements(Properties props, int opcount,
-			long runtime) throws IOException {
+	private static void exportMeasurements(Properties props, int opcount, long runtime) throws IOException {
 		MeasurementsExporter exporter = null;
 		try {
 			// if no destination file is provided the results will be written to
@@ -395,22 +383,18 @@ public class Client {
 			}
 
 			// if no exporter is provided the default text one will be used
-			String exporterStr = props
-					.getProperty("exporter",
-							"com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
+			String exporterStr = props.getProperty("exporter", "com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
 			try {
 				exporter = (MeasurementsExporter) Class.forName(exporterStr)
 						.getConstructor(OutputStream.class).newInstance(out);
 			} catch (Exception e) {
-				System.err.println("Could not find exporter " + exporterStr
-						+ ", will use default text reporter.");
+				System.err.println("Could not find exporter " + exporterStr + ", will use default text reporter.");
 				e.printStackTrace();
 				exporter = new TextMeasurementsExporter(out);
 			}
 
 			exporter.write("OVERALL", "RunTime(ms)", runtime);
-			double throughput = 1000.0 * ((double) opcount)
-					/ ((double) runtime);
+			double throughput = 1000.0 * ((double) opcount) / ((double) runtime);
 			exporter.write("OVERALL", "Throughput(ops/sec)", throughput);
 
 			Measurements.getMeasurements().exportMeasurements(exporter);
@@ -593,8 +577,7 @@ public class Client {
 				} catch (InterruptedException e) {
 					return;
 				}
-				System.err
-						.println(" (might take a few minutes for large data sets)");
+				System.err.println(" (might take a few minutes for large data sets)");
 			}
 		};
 
@@ -609,8 +592,7 @@ public class Client {
 		Workload workload = null;
 
 		try {
-			Class workloadclass = classLoader.loadClass(props
-					.getProperty(WORKLOAD_PROPERTY));
+			Class workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
 
 			workload = (Workload) workloadclass.newInstance();
 		} catch (Exception e) {
@@ -646,13 +628,18 @@ public class Client {
 
 		Vector<Thread> threads = new Vector<Thread>();
 
+		String protocol = props.getProperty(PROTOCOL_PROPERTY);
 		for (int threadid = 0; threadid < threadcount; threadid++) {
 			DataStore db = null;
 			try {
-				if (dbname.equals("com.yahoo.ycsb.db.SpymemcachedClient"))
+				if (protocol.equals("memcached"))
 					db = MemcachedFactory.newMemcached(dbname, props);
-				else
+				else if (protocol.equals("db"))
 					db = DBFactory.newDB(dbname, props);
+				else {
+					System.out.println("Invalid Protocol: " + protocol);
+					System.exit(0);
+				}
 			} catch (UnknownDataStoreException e) {
 				System.out.println("Unknown DB " + dbname);
 				System.exit(0);

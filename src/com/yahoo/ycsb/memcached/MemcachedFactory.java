@@ -37,6 +37,9 @@ public class MemcachedFactory {
 			// System.out.println("dbclass.getName() = " + dbclass.getName());
 
 			ret = (Memcached) memcachedclass.newInstance();
+		} catch (ClassCastException e) {
+			System.out.println("Cannot instantiate " + memcachedname + " with specified protocol");
+			System.exit(0); 
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

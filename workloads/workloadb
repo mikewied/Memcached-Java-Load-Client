@@ -22,6 +22,7 @@
 #   Request distribution: zipfian
 
 db=com.yahoo.ycsb.db.SpymemcachedClient
+protocol=memcached
 memcached.address=10.1.5.102
 memcached.port=11211
 memcached.verbose=false
@@ -54,5 +55,5 @@ printstatsinterval=5
 
 requestdistribution=zipfian
 
-threadcount=100
+threadcount=1
 target=4000

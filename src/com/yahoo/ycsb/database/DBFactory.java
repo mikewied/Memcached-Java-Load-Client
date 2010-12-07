@@ -37,6 +37,9 @@ public class DBFactory {
 			// System.out.println("dbclass.getName() = " + dbclass.getName());
 
 			ret = (DB) dbclass.newInstance();
+		} catch (ClassCastException e) {
+			System.out.println("Cannot instantiate " + dbname + " with specified protocol");
+			System.exit(0); 
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
