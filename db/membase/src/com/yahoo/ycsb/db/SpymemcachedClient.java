@@ -10,7 +10,6 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import net.spy.memcached.CASResponse;
-import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedClient;
 
 import com.yahoo.ycsb.memcached.Memcached;
@@ -23,6 +22,10 @@ public class SpymemcachedClient extends Memcached {
 
 	public static final String SIMULATE_DELAY = "memcached.simulatedelay";
 	public static final String SIMULATE_DELAY_DEFAULT = "0";
+	
+	public static final String MEMBASE_PORT = "membase.port";
+	public static final String MEMBASE_PORT_DEFAULT = "11211";
+	int membaseport;
 	
 	Random random;
 	boolean verbose;
@@ -41,26 +44,16 @@ public class SpymemcachedClient extends Memcached {
 	public void init() {
 		verbose = Boolean.parseBoolean(getProperties().getProperty(VERBOSE, VERBOSE_DEFAULT));
 		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
+		membaseport = Integer.parseInt(getProperties().getProperty(MEMBASE_PORT, MEMBASE_PORT_DEFAULT));
 
 		String addr = getProperties().getProperty("memcached.address");
 		try {
-			client = new MemcachedClient(new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), 11211));
+			InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), membaseport);
+			client = new MemcachedClient(ia);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		}
-		
-		if (verbose) {
-			System.out.println("***************** properties *****************");
-			Properties p = getProperties();
-			if (p != null) {
-				for (Enumeration e = p.propertyNames(); e.hasMoreElements();) {
-					String k = (String) e.nextElement();
-					System.out.println("\"" + k + "\"=\"" + p.getProperty(k) + "\"");
-				}
-			}
-			System.out.println("**********************************************");
 		}
 	}
 	
@@ -90,6 +83,7 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println("GET Interrupted");
 		} catch (ExecutionException e) {
 			System.out.println("GET Execution");
+			//e.printStackTrace();
 		} catch (RuntimeException e) {
 			System.out.println("GET Runtime");
 		}
@@ -105,6 +99,7 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println("SET Interrupted");
 		} catch (ExecutionException e) {
 			System.out.println("SET Execution");
+			//e.printStackTrace();
 		} catch (RuntimeException e) {
 			System.out.println("SET Runtime");
 		}

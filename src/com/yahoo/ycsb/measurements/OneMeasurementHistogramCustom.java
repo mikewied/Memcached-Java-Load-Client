@@ -18,7 +18,6 @@
 package com.yahoo.ycsb.measurements;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -29,15 +28,10 @@ import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
  * LATENCY.
  * 
  * @author cooperb
- * 
+ *
  */
 public class OneMeasurementHistogramCustom extends OneMeasurement {
-	public static final int BUCKETS = 15;
-	public static final double NORMAL_Z_75 = 0.68;
-	public static final double NORMAL_Z_85 = 1.04;
-	public static final double NORMAL_Z_95 = 1.65;
-	public static final double NORMAL_Z_99 = 2.33;
-	public static final double NORMAL_Z_999 = 3.09;
+	public static final int BUCKETS = 20;
 	
 	int[] histogram;
 	int[] windowhistogram;
@@ -128,11 +122,9 @@ public class OneMeasurementHistogramCustom extends OneMeasurement {
 		exporter.write(getName(), "Standard Deviation", stddev);
 		exporter.write(getName(), "MinLatency(us)", min);
 		exporter.write(getName(), "MaxLatency(us)", max);
-		exporter.write(getName(), "75thPercentileLatency(us)", (mean + stddev * NORMAL_Z_75));
-		exporter.write(getName(), "85thPercentileLatency(us)", (mean + stddev * NORMAL_Z_85));
-		exporter.write(getName(), "95thPercentileLatency(us)", (mean + stddev * NORMAL_Z_95));
-		exporter.write(getName(), "99thPercentileLatency(us)", (mean + stddev * NORMAL_Z_99));
-		exporter.write(getName(), "99.9thPercentileLatency(us)", (mean + stddev * NORMAL_Z_999));
+		exporter.write(getName(), "95thPercentileLatency(us)", getPercentile(histogram, .95));
+		exporter.write(getName(), "99thPercentileLatency(us)", getPercentile(histogram, .99));
+		exporter.write(getName(), "99.9thPercentileLatency(us)", getPercentile(histogram, .999));
 		
 		for (Integer I : returncodes.keySet()) {
 			int[] val = returncodes.get(I);

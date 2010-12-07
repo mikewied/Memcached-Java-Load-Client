@@ -411,9 +411,8 @@ public class MemcachedCoreWorkload extends Workload {
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String key = "user" + keynum;
-		long cas = memcached.gets(key);
-		memcached.append(key, cas, "appended_string");
+		String key = keyprefix + keynum;
+		memcached.append(key, 0, "appended_string");
 	}
 	
 	public void doTransactionCas(Memcached memcached) {
@@ -425,7 +424,7 @@ public class MemcachedCoreWorkload extends Workload {
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String key = "user" + keynum;
+		String key = keyprefix + keynum;
 		long cas = memcached.gets(key);
 		String value = Utils.ASCIIString(valuelength);
 		memcached.cas(key, cas, value);
@@ -448,7 +447,7 @@ public class MemcachedCoreWorkload extends Workload {
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String keyname = "user" + keynum;
+		String keyname = keyprefix + keynum;
 
 		memcached.get(keyname, null);
 	}
@@ -462,7 +461,7 @@ public class MemcachedCoreWorkload extends Workload {
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		return memcached.gets("user" + keynum);
+		return memcached.gets(keyprefix + keynum);
 	}
 	
 	public void doTransactionIncr(Memcached memcached) {
@@ -478,9 +477,8 @@ public class MemcachedCoreWorkload extends Workload {
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String key = "user" + keynum;
-		long cas = memcached.gets(key);
-		memcached.prepend(key, cas, "prepended_string");
+		String key = keyprefix + keynum;
+		memcached.prepend(key, 0, "prepended_string");
 	}
 	
 	public void doTransactionReplace(Memcached memcached) {
@@ -492,19 +490,22 @@ public class MemcachedCoreWorkload extends Workload {
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String key = "user" + keynum;
+		String key = keyprefix + keynum;
 		String value = Utils.ASCIIString(valuelength);
 		memcached.replace(key, value);
 	}
 	
 	public void doTransactionSet(Memcached memcached) {
-		// choose the next key
-		int keynum = transactioninsertkeysequence.nextInt();
+		int keynum;
+		do {
+			keynum = keychooser.nextInt();
+		} while (keynum > transactioninsertkeysequence.lastInt());
+
 		if (!orderedinserts) {
 			keynum = Utils.hash(keynum);
 		}
-		String dbkey = keyprefix + keynum;
+		String keyname = keyprefix + keynum;
 		String value = Utils.ASCIIString(valuelength);
-		memcached.set(dbkey, value);
+		memcached.set(keyname, value);
 	}
 }

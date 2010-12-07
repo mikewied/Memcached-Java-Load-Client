@@ -76,6 +76,7 @@ class StatusThread extends Thread {
 				if (t.getState() != Thread.State.TERMINATED) {
 					alldone = false;
 				}
+				//System.out.println(t.getName() + " " + t.getState());
 
 				ClientThread ct = (ClientThread) t;
 				totalops += ct.getOpsDone();

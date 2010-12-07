@@ -22,12 +22,13 @@
 #   Request distribution: zipfian
 
 db=com.yahoo.ycsb.db.SpymemcachedClient
-memcached.address=10.2.1.11
+memcached.address=10.1.5.102
+memcached.port=11211
 memcached.verbose=false
 
 histogram.buckets=20
 exportfile=results.txt
-recordcount=10000
+recordcount=100000
 operationcount=100000
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
@@ -39,19 +40,19 @@ updateproportion=0
 scanproportion=0
 
 #memaddproportion=0.05
-memgetproportion=0.70
-memsetproportion=0.05
+memgetproportion=1.0
+#memsetproportion=0
 #memappendproportion=0.05
 #memprependproportion=0.05
 #memreplaceproportion=0.05
 #memcasproportion=0.05
 
-workingset=10000
+workingset=100000
 churndelta=100000
 
 printstatsinterval=5
 
-requestdistribution=churn
+requestdistribution=zipfian
 
-threadcount=5
-#target=10000
+threadcount=100
+target=4000
