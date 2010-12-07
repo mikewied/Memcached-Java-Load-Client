@@ -24,19 +24,22 @@ import java.util.Random;
  * significantly more than older items.
  */
 public class ChurnGenerator extends IntegerGenerator {
+	int recordcount;
 	Random _r;
+	int[] workingset;
 	int workingsetsize;
+	int workingsetmaxsize;
 	int workingsetdelta;
-	int workingSetLo;
-	int workingSetHi;
 	int ops;
+	
 
-	public ChurnGenerator(int workingsetsize, int workingsetdelta) {
+	public ChurnGenerator(int workingsetmaxsize, int workingsetdelta, int recordcount) {
 		_r = new Random();
-		this.workingsetsize = workingsetsize;
+		this.workingset = new int[workingsetmaxsize];
+		this.workingsetsize = 0;
+		this.workingsetmaxsize = workingsetmaxsize;
 		this.workingsetdelta = workingsetdelta;
-		workingSetLo = 0;
-		workingSetHi = workingsetsize;
+		this.recordcount = recordcount;
 		ops = 0;
 		nextInt();
 	}
@@ -46,19 +49,32 @@ public class ChurnGenerator extends IntegerGenerator {
 	 * items most recently returned by the basis generator.
 	 */
 	public int nextInt() {
+		while (workingsetsize < workingsetmaxsize) {
+			workingset[workingsetsize] = _r.nextInt(recordcount);
+			workingsetsize++;
+		}
 		if (ops > workingsetdelta) {
 			ops = 0;
-			workingSetLo++;
-			workingSetHi++;
+			int index = _r.nextInt(workingsetsize);
+			int next_val = _r.nextInt(recordcount);
+			workingset[index] = next_val;
 		}
-		int relvalue = _r.nextInt(workingsetsize);
 		ops++;
-		return (workingSetLo + relvalue) % 50;
+		return workingset[_r.nextInt(workingsetmaxsize)];
+	}
+	
+	/**
+	 * 
+	 * @param args
+	 */
+	public void resizeWorkingSet() {
+		
 	}
 
 	public static void main(String[] args) {
-		int[] keys = new int[50];
-		ChurnGenerator gen = new ChurnGenerator(5, 1000);
+		int recordcount = 100;
+		int[] keys = new int[recordcount];
+		ChurnGenerator gen = new ChurnGenerator(5, 100, recordcount);
 		for (int i = 0; i < Integer.parseInt(args[0]); i++) {
 			keys[Integer.parseInt(gen.nextString())]++;
 		}

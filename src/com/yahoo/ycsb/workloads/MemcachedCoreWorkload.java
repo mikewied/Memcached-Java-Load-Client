@@ -247,7 +247,7 @@ public class MemcachedCoreWorkload extends Workload {
 		String scanlengthdistrib = p.getProperty(SCAN_LENGTH_DISTRIBUTION_PROPERTY, SCAN_LENGTH_DISTRIBUTION_PROPERTY_DEFAULT);
 		int insertstart = Integer.parseInt(p.getProperty(INSERT_START_PROPERTY, INSERT_START_PROPERTY_DEFAULT));
 		keyprefix = p.getProperty(KEY_PREFIX_PROPERTY, KEY_PREFIX_PROPERTY_DEFAULT);
-
+		
 		if (p.getProperty(INSERT_ORDER_PROPERTY, INSERT_ORDER_PROPERTY_DEFAULT)
 				.compareTo("hashed") == 0) {
 			orderedinserts = false;
@@ -317,7 +317,7 @@ public class MemcachedCoreWorkload extends Workload {
 		} else if (requestdistrib.compareTo("latest") == 0) {
 			keychooser = new SkewedLatestGenerator(transactioninsertkeysequence);
 		} else if (requestdistrib.compareTo("churn") == 0){
-			keychooser = new ChurnGenerator(workingset, delta);
+			keychooser = new ChurnGenerator(workingset, delta, recordcount);
 		} else {
 			throw new WorkloadException("Unknown distribution \"" + requestdistrib + "\"");
 		}

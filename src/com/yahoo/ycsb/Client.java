@@ -635,15 +635,12 @@ public class Client {
 
 		int opcount;
 		if (dotransactions) {
-			opcount = Integer.parseInt(props.getProperty(
-					OPERATION_COUNT_PROPERTY, "0"));
+			opcount = Integer.parseInt(props.getProperty(OPERATION_COUNT_PROPERTY, "0"));
 		} else {
 			if (props.containsKey(INSERT_COUNT_PROPERTY)) {
-				opcount = Integer.parseInt(props.getProperty(
-						INSERT_COUNT_PROPERTY, "0"));
+				opcount = Integer.parseInt(props.getProperty(INSERT_COUNT_PROPERTY, "0"));
 			} else {
-				opcount = Integer.parseInt(props.getProperty(
-						RECORD_COUNT_PROPERTY, "0"));
+				opcount = Integer.parseInt(props.getProperty(RECORD_COUNT_PROPERTY, "0"));
 			}
 		}
 

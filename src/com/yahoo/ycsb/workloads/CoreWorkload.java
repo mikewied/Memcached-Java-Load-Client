@@ -359,7 +359,7 @@ public class CoreWorkload extends Workload {
 		} else if (requestdistrib.compareTo("latest") == 0) {
 			keychooser = new SkewedLatestGenerator(transactioninsertkeysequence);
 		}  else if (requestdistrib.compareTo("churn") == 0){
-			keychooser = new ChurnGenerator(workingset, delta);
+			keychooser = new ChurnGenerator(workingset, delta, recordcount);
 		} else {
 			throw new WorkloadException("Unknown distribution \""
 					+ requestdistrib + "\"");

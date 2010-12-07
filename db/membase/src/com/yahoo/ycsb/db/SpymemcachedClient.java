@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Enumeration;
-import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
@@ -40,7 +38,6 @@ public class SpymemcachedClient extends Memcached {
 	 * Initialize any state for this DB. Called once per DB instance; there is
 	 * one DB instance per client thread.
 	 */
-	@SuppressWarnings("rawtypes")
 	public void init() {
 		verbose = Boolean.parseBoolean(getProperties().getProperty(VERBOSE, VERBOSE_DEFAULT));
 		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
