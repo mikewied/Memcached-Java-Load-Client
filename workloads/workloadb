@@ -27,10 +27,12 @@ memcached.address=10.1.5.102
 memcached.port=11211
 memcached.verbose=false
 
+slaveaddress=127.0.0.1
+
 histogram.buckets=20
 exportfile=results.txt
-recordcount=100000
-operationcount=100000
+recordcount=1000
+operationcount=1000000
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
 readallfields=true
@@ -41,8 +43,8 @@ updateproportion=0
 scanproportion=0
 
 #memaddproportion=0.05
-memgetproportion=1.0
-#memsetproportion=0
+memgetproportion=1.00
+memsetproportion=0.00
 #memappendproportion=0.05
 #memprependproportion=0.05
 #memreplaceproportion=0.05
@@ -55,5 +57,5 @@ printstatsinterval=5
 
 requestdistribution=zipfian
 
-threadcount=1
-target=4000
+threadcount=32
+target=30000

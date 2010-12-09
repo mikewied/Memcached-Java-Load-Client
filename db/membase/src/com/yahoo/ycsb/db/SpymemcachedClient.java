@@ -5,10 +5,18 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import net.spy.memcached.CASResponse;
+import net.spy.memcached.CachedData;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.ops.GetOperation;
+import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.transcoders.Transcoder;
 
 import com.yahoo.ycsb.memcached.Memcached;
 
@@ -24,6 +32,8 @@ public class SpymemcachedClient extends Memcached {
 	public static final String MEMBASE_PORT = "membase.port";
 	public static final String MEMBASE_PORT_DEFAULT = "11211";
 	int membaseport;
+	
+	public static long endtime;
 	
 	Random random;
 	boolean verbose;
@@ -70,9 +80,11 @@ public class SpymemcachedClient extends Memcached {
 	}
 	
 	@Override
-	public int get(String key, Object value) {	
+	public int get(String key, Object value) {
+		Future<Object> f = client.asyncGet(key);
+		//long time = System.nanoTime();
 		try {
-			if (client.asyncGet(key).get() == null) {
+			if (f.get() == null) {
 				System.out.println("Error");
 				return -1;
 			}
@@ -80,13 +92,51 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println("GET Interrupted");
 		} catch (ExecutionException e) {
 			System.out.println("GET Execution");
-			//e.printStackTrace();
+			e.printStackTrace();
 		} catch (RuntimeException e) {
 			System.out.println("GET Runtime");
+			e.printStackTrace();
 		}
+		//System.out.println("Start: " + time);
+		//System.out.println("Start: " + endtime);
+		//System.out.println("Spy latency: " + ((endtime - time)/1000));
 		return 0;
 	}
+	/*
+	public Future<Object> asyncGet(final String key) {
+		return asyncGet(key, client.getTranscoder());
+	}
 	
+	public <T> Future<T> asyncGet(final String key, final Transcoder<T> tc) {
+		final CountDownLatch latch=new CountDownLatch(1);
+		final GetFuture<T> rv=new GetFuture<T>(latch, 1000);
+		
+		Operation op=client.opFact.get(key,
+				new GetOperation.Callback() {
+			private Future<T> val=null;
+			public void receivedStatus(OperationStatus status) {
+				rv.set(val);
+				
+			}
+			public void gotData(String k, int flags, byte[] data) {
+				assert key.equals(k) : "Wrong key returned";
+				val=client.tcService.decode(tc,
+					new CachedData(flags, data, tc.getMaxSize()));
+			}
+			
+			public void complete() {
+				SpymemcachedClient.endtime = System.nanoTime();
+				System.out.println("Complete");
+				latch.countDown();
+			}});
+		rv.setOperation(op);
+		client.addOp(key, op);
+		return rv;
+	}*/
+	
+	
+	
+
 	@Override
 	public int set(String key, Object value) {
 		try {
@@ -96,9 +146,10 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println("SET Interrupted");
 		} catch (ExecutionException e) {
 			System.out.println("SET Execution");
-			//e.printStackTrace();
+			e.printStackTrace();
 		} catch (RuntimeException e) {
 			System.out.println("SET Runtime");
+			e.printStackTrace();
 		}
 		return 0;
 	}

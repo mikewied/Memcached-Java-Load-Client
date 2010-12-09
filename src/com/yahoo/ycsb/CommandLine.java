@@ -49,7 +49,7 @@ public class CommandLine {
 				.println("  -db classname: Use a specified DB class (can also set the \"db\" property)");
 		System.out
 				.println("  -table tablename: Use the table name instead of the default \""
-						+ CoreWorkload.TABLENAME_PROPERTY_DEFAULT + "\"");
+						+ DBCoreWorkload.TABLENAME_PROPERTY_DEFAULT + "\"");
 		System.out.println();
 	}
 
@@ -74,7 +74,7 @@ public class CommandLine {
 
 		Properties props = new Properties();
 		Properties fileprops = new Properties();
-		String table = CoreWorkload.TABLENAME_PROPERTY_DEFAULT;
+		String table = DBCoreWorkload.TABLENAME_PROPERTY_DEFAULT;
 
 		while ((argindex < args.length) && (args[argindex].startsWith("-"))) {
 			if ((args[argindex].compareTo("-help") == 0)
