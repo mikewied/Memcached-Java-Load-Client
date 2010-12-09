@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import com.yahoo.ycsb.rmi.PropertyPackage;
+
 public class LoadGenerator {
 
 	public static void main(String[] args) {
@@ -121,11 +123,15 @@ public class LoadGenerator {
 		if (!checkRequiredProperties(props)) {
 			System.exit(0);
 		}
+		
+		PropertyPackage proppkg = new PropertyPackage(props, dotransactions, threadcount, target, status, slave, label);
+		
+		
 		Client client;
 		if (slave)
-			client = new SlaveClient(props, dotransactions, threadcount, target, status, slave, label);
+			client = new SlaveClient();
 		else
-			client = new MasterClient(props, dotransactions, threadcount, target, status, slave, label);
+			client = new MasterClient(proppkg);
 		client.init();
 	}
 	

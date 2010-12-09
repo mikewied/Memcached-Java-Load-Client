@@ -4,53 +4,93 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Properties;
+import java.util.LinkedList;
+import java.util.List;
 
+import com.yahoo.ycsb.rmi.PropertyPackage;
 import com.yahoo.ycsb.rmi.RMIInterface;
 
 public class MasterClient extends Client{
 	LoadThread thread;
-	Registry registry;
+	List<Registry> registry;
+	String[] address;
 	
-	public MasterClient(Properties props, boolean dotransactions, int threadcount, int target, boolean status, boolean slave, String label) {
-		super(props, dotransactions, threadcount, target, status, label);
-		thread = new LoadThread(props, dotransactions, threadcount, target, status, label);
+	
+	public MasterClient(PropertyPackage proppkg) {
+		super(proppkg);
+		String addresses  = proppkg.props.getProperty("slaveaddress", null);
+		
+		if (addresses != null)
+			address = addresses.split(",");
+		else
+			address = null;
+		registry = new LinkedList<Registry>();
 	}
 	
 	public void init() {
-		//if (System.getSecurityManager() == null) {
-        //    System.setSecurityManager(new SecurityManager());
-        //}
-		String slaveAddresses = props.getProperty("slaveaddress", null);
-		
-		if (slaveAddresses != null) {
-			try {
-	            System.out.println("Setting up Master");
-	            registry = LocateRegistry.getRegistry(slaveAddresses);
-	        } catch (Exception e) {
-	            System.err.println("Could not connect to slave on " + slaveAddresses);
-	        }
+		if (address != null) {
+			for (int i = 0; i < address.length; i++) {
+				try {
+		            System.out.println("Setting up Master");
+		            registry.add(LocateRegistry.getRegistry(address[i]));
+		        } catch (Exception e) {
+		            System.err.println("Could not connect to slave on " + address[i]);
+		        }
+			}
 	        setupSlaves();
 		}
 		execute();
 	}
 	
 	private void setupSlaves() {
-		
+		int res;
+		for (int i = 0; i < registry.size(); i++) {
+			try {
+				RMIInterface loadgen;
+				loadgen = (RMIInterface) registry.get(i).lookup(REGISTRY_NAME);
+				res = loadgen.setProperties(proppkg);
+				if (res == 0)
+					System.out.println("Slave Got Property Package");
+				else if (res == -1)
+					System.out.println("Property Package sent to Slave was NULL");
+				else
+					System.out.println("Unknown Error Code");
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Override
+	public int setProperties(PropertyPackage proppkg) {
+
+		return 0;
 	}
 	
-	public String execute() {
-		String res;
-		try {
-			RMIInterface loadgen;
-			loadgen = (RMIInterface) registry.lookup(REGISTRY_NAME);
-			res = loadgen.execute();
-			System.out.println(res);
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-		}catch (RemoteException e) {
-			e.printStackTrace();
+	@Override
+	public int execute() {
+		int res;
+		for (int i = 0; i < registry.size(); i++) {
+			try {
+				RMIInterface loadgen;
+				loadgen = (RMIInterface) registry.get(i).lookup(REGISTRY_NAME);
+				res = loadgen.execute();
+				if (res == 0)
+					System.out.println("Load Generation Started On Slave");
+				else if (res == -1)
+					System.out.println("No available threads: Max is 5");
+				else if (res == -2)
+					System.out.println("Slave has no props file");
+				else
+					System.out.println("Unknown Error Code");
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}catch (RemoteException e) {
+				e.printStackTrace();
+			}
 		}
-		return "Starting Load Generation on Master Client";
+		return 0;
 	}
 }

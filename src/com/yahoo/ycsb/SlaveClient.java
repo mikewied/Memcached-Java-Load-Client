@@ -7,6 +7,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
+import com.yahoo.ycsb.rmi.PropertyPackage;
 import com.yahoo.ycsb.rmi.RMIImpl;
 import com.yahoo.ycsb.rmi.RMIInterface;
 
@@ -18,16 +19,12 @@ public class SlaveClient extends Client {
 	RMIInterface stub;
 	Registry registry;
 	
-	public SlaveClient(Properties props, boolean dotransactions, int threadcount, int target, boolean status, boolean slave, String label) {
-		super(props, dotransactions, threadcount, target, status, label);
+	public SlaveClient() {
+		super(null);
 		threads = new LoadThread[MAX_LOAD_THREADS];
 	}
 	
 	public void init() {
-		//if (System.getSecurityManager() == null) {
-        //    System.setSecurityManager(new SecurityManager());
-        //}
-		
 		try {
             engine = new RMIImpl(this);
             stub = (RMIInterface) UnicastRemoteObject.exportObject(engine, 0);
@@ -44,26 +41,35 @@ public class SlaveClient extends Client {
         }
 	}
 	
-	public void setProps() {
-		
+	@Override
+	public int setProperties(PropertyPackage proppkg) {
+		if (proppkg == null)
+			return -1;
+		this.proppkg = proppkg;
+		return 0;
 	}
 	
-	public String execute() {
+	@Override
+	public int execute() {
+		if (proppkg == null)
+			return -2;
 		LoadThread thread = getAvailableThread();
 		System.out.println(thread);
 		if (thread == null)
-			return "No available threads: Max is 5";
+			return -1;
 		thread.start();
-		return "Load Generation Started On Slave";
+		return 0;
 	}
 	
 	private LoadThread getAvailableThread() {
 		for (int i = 0; i < MAX_LOAD_THREADS; i++) {
 			if (threads[i] == null || threads[i].getState() == Thread.State.TERMINATED) {
-				threads[i] = new LoadThread(props, dotransactions, threadcount, target, status, label);
+				threads[i] = new LoadThread(proppkg);
 				return threads[i];
 			}
 		}
 		return null;
 	}
+
+	
 }

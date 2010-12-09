@@ -19,6 +19,8 @@ package com.yahoo.ycsb;
 
 import java.util.*;
 
+import com.yahoo.ycsb.rmi.PropertyPackage;
+
 //import org.apache.log4j.BasicConfigurator;
 
 /**
@@ -34,24 +36,15 @@ public abstract class Client {
 	public static final String INSERT_COUNT_PROPERTY = "insertcount";
 	public static final String PRINT_STATS_INTERVAL = "printstatsinterval";
 	
-	String dbname;
-	Properties props;
-	boolean dotransactions;
-	int threadcount;
-	int target;
-	boolean status;
-	String label;
+	PropertyPackage proppkg;
 	
-	public Client(Properties props, boolean dotransactions, int threadcount, int target, boolean status, String label) {
-		this.props = props;
-		this.dotransactions = dotransactions;
-		this.threadcount = threadcount;
-		this.target = target;
-		this.status = status;
-		this.label = label;
+	public Client(PropertyPackage proppkg) {
+		this.proppkg = proppkg;
 	}
 	
 	public abstract void init();
 	
-	public abstract String execute();
+	public abstract int execute();
+	
+	public abstract int setProperties(PropertyPackage proppkg);
 }

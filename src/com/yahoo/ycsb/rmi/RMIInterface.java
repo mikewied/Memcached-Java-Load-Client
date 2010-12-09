@@ -5,5 +5,7 @@ import java.rmi.RemoteException;
 
 public interface RMIInterface extends Remote {
 
-	public String execute() throws RemoteException;
+	public int execute() throws RemoteException;
+	
+	public int setProperties(PropertyPackage proppkg) throws RemoteException;
 }

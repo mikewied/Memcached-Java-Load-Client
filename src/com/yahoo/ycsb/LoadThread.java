@@ -26,6 +26,7 @@ import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
 import com.yahoo.ycsb.memcached.MemcachedFactory;
 //import org.apache.log4j.BasicConfigurator;
+import com.yahoo.ycsb.rmi.PropertyPackage;
 
 /**
  * Main class for executing YCSB.
@@ -35,37 +36,24 @@ public class LoadThread extends Thread {
 
 	public static final String PRINT_STATS_INTERVAL_DEFAULT = "5";
 	static long printstatsinterval;
+	PropertyPackage proppkg;
 	
-	
-	String dbname;
-	Properties props;
-	boolean dotransactions;
-	int threadcount;
-	int target;
-	boolean status;
-	String label;
-	
-	public LoadThread(Properties props, boolean dotransactions, int threadcount, int target, boolean status, String label) {
-		this.props = props;
-		this.dotransactions = dotransactions;
-		this.threadcount = threadcount;
-		this.target = target;
-		this.status = status;
-		this.label = label;
+	public LoadThread(PropertyPackage proppkg) {
+		this.proppkg = proppkg;
 	}
 		
 
 	public void run() {	
 
 		// get number of threads, target and db
-		threadcount = Integer.parseInt(props.getProperty("threadcount", "1"));
-		dbname = props.getProperty("db", "com.yahoo.ycsb.BasicDB");
-		target = Integer.parseInt(props.getProperty("target", "0"));
+		proppkg.threadcount = Integer.parseInt(proppkg.props.getProperty("threadcount", "1"));
+		proppkg.dbname = proppkg.props.getProperty("db", "com.yahoo.ycsb.BasicDB");
+		proppkg.target = Integer.parseInt(proppkg.props.getProperty("target", "0"));
 
 		// compute the target throughput
 		double targetperthreadperms = -1;
-		if (target > 0) {
-			double targetperthread = ((double) target) / ((double) threadcount);
+		if (proppkg.target > 0) {
+			double targetperthread = ((double) proppkg.target) / ((double) proppkg.threadcount);
 			targetperthreadperms = targetperthread / 1000.0;
 		}
 
@@ -87,7 +75,7 @@ public class LoadThread extends Thread {
 		warningthread.start();
 
 		// set up measurements
-		Measurements.setProperties(props);
+		Measurements.setProperties(proppkg.props);
 
 		// load the workload
 		ClassLoader classLoader = Client.class.getClassLoader();
@@ -95,7 +83,7 @@ public class LoadThread extends Thread {
 		Workload workload = null;
 
 		try {
-			Class workloadclass = classLoader.loadClass(props.getProperty(Client.WORKLOAD_PROPERTY));
+			Class workloadclass = classLoader.loadClass(proppkg.props.getProperty(Client.WORKLOAD_PROPERTY));
 
 			workload = (Workload) workloadclass.newInstance();
 		} catch (Exception e) {
@@ -105,7 +93,7 @@ public class LoadThread extends Thread {
 		}
 
 		try {
-			workload.init(props);
+			workload.init(proppkg.props);
 		} catch (WorkloadException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
@@ -119,52 +107,52 @@ public class LoadThread extends Thread {
 		System.err.println("Starting test.");
 
 		int opcount;
-		if (dotransactions) {
-			opcount = Integer.parseInt(props.getProperty(Client.OPERATION_COUNT_PROPERTY, "0"));
+		if (proppkg.dotransactions) {
+			opcount = Integer.parseInt(proppkg.props.getProperty(Client.OPERATION_COUNT_PROPERTY, "0"));
 		} else {
-			if (props.containsKey(Client.INSERT_COUNT_PROPERTY)) {
-				opcount = Integer.parseInt(props.getProperty(Client.INSERT_COUNT_PROPERTY, "0"));
+			if (proppkg.props.containsKey(Client.INSERT_COUNT_PROPERTY)) {
+				opcount = Integer.parseInt(proppkg.props.getProperty(Client.INSERT_COUNT_PROPERTY, "0"));
 			} else {
-				opcount = Integer.parseInt(props.getProperty(Client.RECORD_COUNT_PROPERTY, "0"));
+				opcount = Integer.parseInt(proppkg.props.getProperty(Client.RECORD_COUNT_PROPERTY, "0"));
 			}
 		}
 
 		Vector<Thread> threads = new Vector<Thread>();
 
-		String protocol = props.getProperty(Client.PROTOCOL_PROPERTY);
-		for (int threadid = 0; threadid < threadcount; threadid++) {
+		String protocol = proppkg.props.getProperty(Client.PROTOCOL_PROPERTY);
+		for (int threadid = 0; threadid < proppkg.threadcount; threadid++) {
 			DataStore db = null;
 			try {
 				if (protocol.equals("memcached"))
-					db = MemcachedFactory.newMemcached(dbname, props);
+					db = MemcachedFactory.newMemcached(proppkg.dbname, proppkg.props);
 				else if (protocol.equals("db"))
-					db = DBFactory.newDB(dbname, props);
+					db = DBFactory.newDB(proppkg.dbname, proppkg.props);
 				else {
 					System.out.println("Invalid Protocol: " + protocol);
 					System.exit(0);
 				}
 			} catch (UnknownDataStoreException e) {
-				System.out.println("Unknown DB " + dbname);
+				System.out.println("Unknown DB " + proppkg.dbname);
 				System.exit(0);
 			}
-			Thread t = new ClientThread(db, dotransactions, workload, threadid,
-					threadcount, props, opcount / threadcount,
+			Thread t = new ClientThread(db, proppkg.dotransactions, workload, threadid,
+					proppkg.threadcount, proppkg.props, opcount / proppkg.threadcount,
 					targetperthreadperms);
 
 			threads.add(t);
 			// t.start();
 		}
 		
-		printstatsinterval = Long.parseLong(props.getProperty(Client.PRINT_STATS_INTERVAL, PRINT_STATS_INTERVAL_DEFAULT));
+		printstatsinterval = Long.parseLong(proppkg.props.getProperty(Client.PRINT_STATS_INTERVAL, PRINT_STATS_INTERVAL_DEFAULT));
 		StatusThread statusthread = null;
 
-		if (status) {
+		if (proppkg.status) {
 			boolean standardstatus = false;
-			if (props.getProperty("measurementtype", "")
+			if (proppkg.props.getProperty("measurementtype", "")
 					.compareTo("timeseries") == 0) {
 				standardstatus = true;
 			}
-			statusthread = new StatusThread(threads, label, standardstatus, printstatsinterval);
+			statusthread = new StatusThread(threads, proppkg.label, standardstatus, printstatsinterval);
 			statusthread.start();
 		}
 
@@ -183,7 +171,7 @@ public class LoadThread extends Thread {
 
 		long en = System.currentTimeMillis();
 
-		if (status) {
+		if (proppkg.status) {
 			statusthread.interrupt();
 		}
 
@@ -196,7 +184,7 @@ public class LoadThread extends Thread {
 		}
 
 		try {
-			exportMeasurements(props, opcount, en - st);
+			exportMeasurements(proppkg.props, opcount, en - st);
 		} catch (IOException e) {
 			System.err.println("Could not export measurements, error: "
 					+ e.getMessage());
