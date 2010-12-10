@@ -95,7 +95,6 @@ public class SpymemcachedClient extends Memcached {
 			e.printStackTrace();
 		} catch (RuntimeException e) {
 			System.out.println("GET Runtime");
-			e.printStackTrace();
 		}
 		//System.out.println("Start: " + time);
 		//System.out.println("Start: " + endtime);
@@ -146,10 +145,8 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println("SET Interrupted");
 		} catch (ExecutionException e) {
 			System.out.println("SET Execution");
-			e.printStackTrace();
 		} catch (RuntimeException e) {
 			System.out.println("SET Runtime");
-			e.printStackTrace();
 		}
 		return 0;
 	}

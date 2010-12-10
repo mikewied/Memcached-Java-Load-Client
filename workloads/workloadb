@@ -23,15 +23,15 @@
 
 db=com.yahoo.ycsb.db.SpymemcachedClient
 protocol=memcached
-memcached.address=10.1.5.102
+memcached.address=10.2.1.11
 memcached.port=11211
 memcached.verbose=false
 
-slaveaddress=127.0.0.1
+slaveaddress=127.0.0.1,10.1.5.102,10.1.5.103
 
 histogram.buckets=20
 exportfile=results.txt
-recordcount=1000
+recordcount=100000
 operationcount=1000000
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
@@ -57,5 +57,5 @@ printstatsinterval=5
 
 requestdistribution=zipfian
 
-threadcount=32
+threadcount=8
 target=30000

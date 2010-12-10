@@ -1,5 +1,7 @@
 package com.yahoo.ycsb;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -32,7 +34,9 @@ public class MasterClient extends Client{
 			for (int i = 0; i < address.length; i++) {
 				try {
 		            System.out.println("Setting up Master");
+		            System.out.println(address[i]);
 		            registry.add(LocateRegistry.getRegistry(address[i]));
+		            
 		        } catch (Exception e) {
 		            System.err.println("Could not connect to slave on " + address[i]);
 		        }
@@ -56,9 +60,9 @@ public class MasterClient extends Client{
 				else
 					System.out.println("Unknown Error Code");
 			} catch (NotBoundException e) {
-				e.printStackTrace();
+				System.out.println("Setup Slaves: Slave is not running");
 			}catch (RemoteException e) {
-				e.printStackTrace();
+				System.out.println("Setup Slaves: Cannot connect to slave");
 			}
 		}
 	}
@@ -86,9 +90,9 @@ public class MasterClient extends Client{
 				else
 					System.out.println("Unknown Error Code");
 			} catch (NotBoundException e) {
-				e.printStackTrace();
+				System.out.println("Execute: Slave is not running");
 			}catch (RemoteException e) {
-				e.printStackTrace();
+				System.out.println("Execute: Cannot connect to slave");
 			}
 		}
 		return 0;
