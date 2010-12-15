@@ -15,10 +15,12 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.client;
 
-import java.util.*;
+import java.util.HashMap;
 
+import com.yahoo.ycsb.measurements.Measurements;
+import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.rmi.PropertyPackage;
 
 //import org.apache.log4j.BasicConfigurator;
@@ -27,7 +29,9 @@ import com.yahoo.ycsb.rmi.PropertyPackage;
  * Main class for executing YCSB.
  */
 public abstract class Client {
-	protected static final String REGISTRY_NAME = "LoadGeneratorRMIInterface"; 
+	
+	
+	
 	protected static final int MAX_LOAD_THREADS = 5;
 	public static final String OPERATION_COUNT_PROPERTY = "operationcount";
 	public static final String RECORD_COUNT_PROPERTY = "recordcount";
@@ -35,16 +39,25 @@ public abstract class Client {
 	public static final String PROTOCOL_PROPERTY = "protocol";
 	public static final String INSERT_COUNT_PROPERTY = "insertcount";
 	public static final String PRINT_STATS_INTERVAL = "printstatsinterval";
+	public static final String PRINT_STATS_INTERVAL_DEFAULT = "5";
 	
+	int status;
 	PropertyPackage proppkg;
 	
 	public Client(PropertyPackage proppkg) {
 		this.proppkg = proppkg;
 	}
 	
-	public abstract void init();
 	
-	public abstract int execute();
+	public abstract int getStatus();
 	
 	public abstract int setProperties(PropertyPackage proppkg);
+	
+	public abstract HashMap<String, OneMeasurement> getCurrentStats();
+
+
+	public abstract void execute();
+	
+	
+	
 }

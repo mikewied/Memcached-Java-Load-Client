@@ -18,16 +18,18 @@
 package com.yahoo.ycsb.measurements;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 /**
  * A single measured metric (such as READ LATENCY)
  */
-public abstract class OneMeasurement {
-
+public abstract class OneMeasurement implements Serializable {
+	private static final long serialVersionUID = 7807865821392650553L;
+	
 	String _name;
-
+	
 	public String getName() {
 		return _name;
 	}
@@ -42,7 +44,11 @@ public abstract class OneMeasurement {
 	public abstract void reportReturnCode(int code);
 
 	public abstract void measure(int latency);
+	
+	public abstract void add(OneMeasurement m);
 
+	public abstract long getOperations();
+	
 	public abstract String getSummary();
 
 	/**

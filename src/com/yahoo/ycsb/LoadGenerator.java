@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import com.yahoo.ycsb.client.Client;
+import com.yahoo.ycsb.client.MasterClient;
+import com.yahoo.ycsb.client.SlaveClient;
 import com.yahoo.ycsb.rmi.PropertyPackage;
 
 public class LoadGenerator {
@@ -120,31 +123,8 @@ public class LoadGenerator {
 
 		props = fileprops;
 		
-		if (!checkRequiredProperties(props)) {
-			System.exit(0);
-		}
-		
-		PropertyPackage proppkg = new PropertyPackage(props, dotransactions, threadcount, target, status, slave, label);
-		
-		
-		Client client;
-		if (slave)
-			client = new SlaveClient();
-		else
-			client = new MasterClient(proppkg);
-		client.init();
-	}
-	
-	public static boolean checkRequiredProperties(Properties props) {
-		if (props.getProperty(Client.WORKLOAD_PROPERTY) == null) {
-			System.out.println("Missing property: " + Client.WORKLOAD_PROPERTY);
-			return false;
-		}
-		if (props.getProperty(Client.PROTOCOL_PROPERTY) == null) {
-			System.out.println("Missing property: " + Client.PROTOCOL_PROPERTY);
-			return false;
-		}
-		return true;
+		MasterClient client = new MasterClient(new PropertyPackage(props, dotransactions, threadcount, target, slave, label));
+		client.execute();
 	}
 	
 	public static void checkMoreArgs(int argindex, int argslength) {

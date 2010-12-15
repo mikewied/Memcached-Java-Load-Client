@@ -15,13 +15,18 @@
  * LICENSE file.                                                                                                                                                                   
  */
 
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.client;
 
 import java.io.*;
 import java.util.*;
 
+import com.yahoo.ycsb.DataStore;
+import com.yahoo.ycsb.UnknownDataStoreException;
+import com.yahoo.ycsb.Workload;
+import com.yahoo.ycsb.WorkloadException;
 import com.yahoo.ycsb.database.DBFactory;
 import com.yahoo.ycsb.measurements.Measurements;
+import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
 import com.yahoo.ycsb.memcached.MemcachedFactory;
@@ -33,46 +38,35 @@ import com.yahoo.ycsb.rmi.PropertyPackage;
  */
 public class LoadThread extends Thread {
 
-
-	public static final String PRINT_STATS_INTERVAL_DEFAULT = "5";
 	static long printstatsinterval;
-	PropertyPackage proppkg;
+	Workload workload;
+	public PropertyPackage proppkg;
+	private Thread statusthread;
+	public Vector<Thread> threads;
 	
 	public LoadThread(PropertyPackage proppkg) {
 		this.proppkg = proppkg;
+		workload = null;
+		statusthread = null;
+		threads = new Vector<Thread>();
+		init();
 	}
 		
 
-	public void run() {	
-
-		// get number of threads, target and db
-		proppkg.threadcount = Integer.parseInt(proppkg.props.getProperty("threadcount", "1"));
-		proppkg.dbname = proppkg.props.getProperty("db", "com.yahoo.ycsb.BasicDB");
-		proppkg.target = Integer.parseInt(proppkg.props.getProperty("target", "0"));
+	public void init() {
+		String workloadloc = proppkg.getProperty(PropertyPackage.WORKLOAD);
+		String dbname = proppkg.getProperty(PropertyPackage.DB_NAME);
+		boolean dotransactions = Boolean.parseBoolean(proppkg.getProperty(PropertyPackage.DO_TRANSACTIONS));
+		int opcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.OP_COUNT));
+		int threadcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.THREAD_COUNT));
+		int target = Integer.parseInt(proppkg.getProperty(PropertyPackage.TARGET));
 
 		// compute the target throughput
 		double targetperthreadperms = -1;
-		if (proppkg.target > 0) {
-			double targetperthread = ((double) proppkg.target) / ((double) proppkg.threadcount);
+		if (target > 0) {
+			double targetperthread = ((double) target) / ((double) threadcount);
 			targetperthreadperms = targetperthread / 1000.0;
 		}
-
-		// show a warning message that creating the workload is taking a while
-		// but only do so if it is taking longer than 2 seconds
-		// (showing the message right away if the setup wasn't taking very long
-		// was confusing people)
-		Thread warningthread = new Thread() {
-			public void run() {
-				try {
-					sleep(2000);
-				} catch (InterruptedException e) {
-					return;
-				}
-				System.err.println(" (might take a few minutes for large data sets)");
-			}
-		};
-
-		warningthread.start();
 
 		// set up measurements
 		Measurements.setProperties(proppkg.props);
@@ -80,18 +74,14 @@ public class LoadThread extends Thread {
 		// load the workload
 		ClassLoader classLoader = Client.class.getClassLoader();
 
-		Workload workload = null;
-
 		try {
-			Class workloadclass = classLoader.loadClass(proppkg.props.getProperty(Client.WORKLOAD_PROPERTY));
-
+			Class workloadclass = classLoader.loadClass(workloadloc);
 			workload = (Workload) workloadclass.newInstance();
 		} catch (Exception e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
 			System.exit(0);
 		}
-
 		try {
 			workload.init(proppkg.props);
 		} catch (WorkloadException e) {
@@ -100,62 +90,32 @@ public class LoadThread extends Thread {
 			System.exit(0);
 		}
 
-		warningthread.interrupt();
-
-		// run the workload
-
-		System.err.println("Starting test.");
-
-		int opcount;
-		if (proppkg.dotransactions) {
-			opcount = Integer.parseInt(proppkg.props.getProperty(Client.OPERATION_COUNT_PROPERTY, "0"));
-		} else {
-			if (proppkg.props.containsKey(Client.INSERT_COUNT_PROPERTY)) {
-				opcount = Integer.parseInt(proppkg.props.getProperty(Client.INSERT_COUNT_PROPERTY, "0"));
-			} else {
-				opcount = Integer.parseInt(proppkg.props.getProperty(Client.RECORD_COUNT_PROPERTY, "0"));
-			}
-		}
-
-		Vector<Thread> threads = new Vector<Thread>();
-
+		// Initialize the database
 		String protocol = proppkg.props.getProperty(Client.PROTOCOL_PROPERTY);
-		for (int threadid = 0; threadid < proppkg.threadcount; threadid++) {
+		for (int threadid = 0; threadid < threadcount; threadid++) {
 			DataStore db = null;
 			try {
 				if (protocol.equals("memcached"))
-					db = MemcachedFactory.newMemcached(proppkg.dbname, proppkg.props);
+					db = MemcachedFactory.newMemcached(dbname, proppkg.props);
 				else if (protocol.equals("db"))
-					db = DBFactory.newDB(proppkg.dbname, proppkg.props);
+					db = DBFactory.newDB(dbname, proppkg.props);
 				else {
 					System.out.println("Invalid Protocol: " + protocol);
 					System.exit(0);
 				}
 			} catch (UnknownDataStoreException e) {
-				System.out.println("Unknown DB " + proppkg.dbname);
+				System.out.println("Unknown DB " + dbname);
 				System.exit(0);
 			}
-			Thread t = new ClientThread(db, proppkg.dotransactions, workload, threadid,
-					proppkg.threadcount, proppkg.props, opcount / proppkg.threadcount,
-					targetperthreadperms);
-
+			Thread t = new ClientThread(db, dotransactions, workload, threadid, threadcount, proppkg.props, opcount / threadcount, targetperthreadperms);
 			threads.add(t);
-			// t.start();
 		}
+	}
+	
+	public void run() {
+		int opcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.OP_COUNT));
+		printstatsinterval = Long.parseLong(proppkg.props.getProperty(Client.PRINT_STATS_INTERVAL, Client.PRINT_STATS_INTERVAL_DEFAULT));
 		
-		printstatsinterval = Long.parseLong(proppkg.props.getProperty(Client.PRINT_STATS_INTERVAL, PRINT_STATS_INTERVAL_DEFAULT));
-		StatusThread statusthread = null;
-
-		if (proppkg.status) {
-			boolean standardstatus = false;
-			if (proppkg.props.getProperty("measurementtype", "")
-					.compareTo("timeseries") == 0) {
-				standardstatus = true;
-			}
-			statusthread = new StatusThread(threads, proppkg.label, standardstatus, printstatsinterval);
-			statusthread.start();
-		}
-
 		long st = System.currentTimeMillis();
 
 		for (Thread t : threads) {
@@ -165,13 +125,12 @@ public class LoadThread extends Thread {
 		for (Thread t : threads) {
 			try {
 				t.join();
-			} catch (InterruptedException e) {
-			}
+			} catch (InterruptedException e) {}
 		}
 
 		long en = System.currentTimeMillis();
 
-		if (proppkg.status) {
+		if (proppkg.slave) {
 			statusthread.interrupt();
 		}
 
@@ -186,22 +145,10 @@ public class LoadThread extends Thread {
 		try {
 			exportMeasurements(proppkg.props, opcount, en - st);
 		} catch (IOException e) {
-			System.err.println("Could not export measurements, error: "
-					+ e.getMessage());
+			System.err.println("Could not export measurements, error: "+ e.getMessage());
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		System.out.println("Thread ending");
-	}
-	
-	public void printStartupMessage(String[] args) {
-		System.out.println("YCSB Client 0.1");
-		System.out.print("Command line:");
-		for (int i = 0; i < args.length; i++) {
-			System.out.print(" " + args[i]);
-		}
-		System.out.println();
-		System.err.println("Loading workload...");
 	}
 
 	/**
@@ -246,8 +193,4 @@ public class LoadThread extends Thread {
 			}
 		}
 	}
-	
-
-	
-	
 }

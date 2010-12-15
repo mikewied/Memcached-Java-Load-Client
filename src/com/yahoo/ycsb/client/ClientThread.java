@@ -1,7 +1,12 @@
-package com.yahoo.ycsb;
+package com.yahoo.ycsb.client;
 
 import java.util.Properties;
 import java.util.Random;
+
+import com.yahoo.ycsb.DataStore;
+import com.yahoo.ycsb.DataStoreException;
+import com.yahoo.ycsb.Workload;
+import com.yahoo.ycsb.WorkloadException;
 
 /**
  * A thread for executing transactions or data inserts to the database.
@@ -9,7 +14,7 @@ import java.util.Random;
  * @author cooperb
  * 
  */
-class ClientThread extends Thread {
+public class ClientThread extends Thread {
 	static Random random = new Random();
 
 	DataStore _db;
@@ -97,6 +102,7 @@ class ClientThread extends Thread {
 
 		try {
 			if (_dotransactions) {
+				
 				long st = System.currentTimeMillis();
 
 				while ((_opcount == 0) || (_opsdone < _opcount)) {

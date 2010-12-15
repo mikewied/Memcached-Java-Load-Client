@@ -43,6 +43,8 @@ class SeriesUnit {
  * A time series measurement of a metric, such as READ LATENCY.
  */
 public class OneMeasurementTimeSeries extends OneMeasurement {
+	private static final long serialVersionUID = 6685835576632562181L;
+
 	/**
 	 * Granularity for time series; measurements will be averaged in chunks of
 	 * this granularity. Units are milliseconds.
@@ -72,8 +74,7 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
 
 	public OneMeasurementTimeSeries(String name, Properties props) {
 		super(name);
-		_granularity = Integer.parseInt(props.getProperty(GRANULARITY,
-				GRANULARITY_DEFAULT));
+		_granularity = Integer.parseInt(props.getProperty(GRANULARITY, GRANULARITY_DEFAULT));
 		_measurements = new Vector<SeriesUnit>();
 		returncodes = new HashMap<Integer, int[]>();
 	}
@@ -166,5 +167,16 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
 		windowoperations = 0;
 		return "[" + getName() + " AverageLatency(ms)=" + d.format(report)
 				+ "]";
+	}
+
+	@Override
+	public void add(OneMeasurement m) {
+		
+	}
+
+	@Override
+	public long getOperations() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

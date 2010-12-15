@@ -53,7 +53,7 @@ public class SpymemcachedClient extends Memcached {
 		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
 		membaseport = Integer.parseInt(getProperties().getProperty(MEMBASE_PORT, MEMBASE_PORT_DEFAULT));
 
-		String addr = getProperties().getProperty("memcached.address");
+		String addr = "10.2.1.11";//getProperties().getProperty("memcached.address");
 		try {
 			InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), membaseport);
 			client = new MemcachedClient(ia);
@@ -62,6 +62,10 @@ public class SpymemcachedClient extends Memcached {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+	}
+	
+	public void cleanup() {
+		client.shutdown();
 	}
 	
 	@Override
@@ -234,5 +238,10 @@ public class SpymemcachedClient extends Memcached {
 			System.out.println("REPLACE Runtime");
 		}
 		return 0;
+	}
+	
+	public static void main(String args[]) {
+		SpymemcachedClient client = new SpymemcachedClient();
+		client.init();
 	}
 }

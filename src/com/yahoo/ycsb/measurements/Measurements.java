@@ -1,40 +1,22 @@
-/**                                                                                                                                                                                
- * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
- *                                                                                                                                                                                 
- * Licensed under the Apache License, Version 2.0 (the "License"); you                                                                                                             
- * may not use this file except in compliance with the License. You                                                                                                                
- * may obtain a copy of the License at                                                                                                                                             
- *                                                                                                                                                                                 
- * http://www.apache.org/licenses/LICENSE-2.0                                                                                                                                      
- *                                                                                                                                                                                 
- * Unless required by applicable law or agreed to in writing, software                                                                                                             
- * distributed under the License is distributed on an "AS IS" BASIS,                                                                                                               
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or                                                                                                                 
- * implied. See the License for the specific language governing                                                                                                                    
- * permissions and limitations under the License. See accompanying                                                                                                                 
- * LICENSE file.                                                                                                                                                                   
- */
-
 package com.yahoo.ycsb.measurements;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
+import com.yahoo.ycsb.client.Client;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
-/**
- * Collects latency measurements, and reports them when requested.
- * 
- * @author cooperb
- * 
- */
 public class Measurements {
+	private static final long serialVersionUID = -311232927139188477L;
+
 	private static final String MEASUREMENT_TYPE = "measurementtype";
 
 	private static final String MEASUREMENT_TYPE_DEFAULT = "histogram";
 
-	static Measurements singleton = null;
+	static Measurements measurements = null;
 
 	static Properties measurementproperties = null;
 
@@ -46,13 +28,15 @@ public class Measurements {
 	 * Return the singleton Measurements object.
 	 */
 	public synchronized static Measurements getMeasurements() {
-		if (singleton == null) {
-			singleton = new Measurements(measurementproperties);
-		}
-		return singleton;
+		if (measurements == null)
+			measurements = new Measurements(measurementproperties);
+		return measurements;
 	}
 
-	HashMap<String, OneMeasurement> data;
+	private long operations;
+	private int partialoperations;
+	HashMap<String, OneMeasurement> totaldata;
+	HashMap<String, OneMeasurement> partialdata;
 	boolean histogram = true;
 
 	private Properties _props;
@@ -61,9 +45,11 @@ public class Measurements {
 	 * Create a new object with the specified properties.
 	 */
 	public Measurements(Properties props) {
-		data = new HashMap<String, OneMeasurement>();
+		totaldata = new HashMap<String, OneMeasurement>();
+		partialdata = new HashMap<String, OneMeasurement>();
 
 		_props = props;
+		operations = 0;
 
 		if (_props.getProperty(MEASUREMENT_TYPE, MEASUREMENT_TYPE_DEFAULT)
 				.compareTo("histogram") == 0) {
@@ -75,7 +61,7 @@ public class Measurements {
 
 	OneMeasurement constructOneMeasurement(String name) {
 		if (histogram) {
-			return new OneMeasurementHistogramCustom(name, _props);
+			return new OneMeasurementHistogram(name, _props);
 		} else {
 			return new OneMeasurementTimeSeries(name, _props);
 		}
@@ -86,35 +72,71 @@ public class Measurements {
 	 * operation="READ" and latency is the measured value.
 	 */
 	public synchronized void measure(String operation, int latency) {
-		if (!data.containsKey(operation)) {
+		if (!totaldata.containsKey(operation) || !partialdata.containsKey(operation)) {
 			synchronized (this) {
-				if (!data.containsKey(operation)) {
-					data.put(operation, constructOneMeasurement(operation));
+				if (!totaldata.containsKey(operation)) {
+					totaldata.put(operation, constructOneMeasurement(operation));
+				}
+				if (!partialdata.containsKey(operation)) {
+					partialdata.put(operation, constructOneMeasurement(operation));
 				}
 			}
 		}
 		try {
-			data.get(operation).measure(latency);
+			operations++;
+			partialoperations++;
+			totaldata.get(operation).measure(latency);
+			partialdata.get(operation).measure(latency);
 		} catch (java.lang.ArrayIndexOutOfBoundsException e) {
-			System.out
-					.println("ERROR: java.lang.ArrayIndexOutOfBoundsException - ignoring and continuing");
+			System.out.println("ERROR: java.lang.ArrayIndexOutOfBoundsException - ignoring and continuing");
 			e.printStackTrace();
 			e.printStackTrace(System.out);
 		}
+	}
+	
+	public synchronized void add(HashMap<String, OneMeasurement> m) {
+		if (m != null) {
+			if (m.size() > 0) {
+				synchronized (this) {
+					Set<String> keyset = this.totaldata.keySet();
+					Iterator<String> itr = keyset.iterator();
+					
+					while (itr.hasNext()) {
+						String item = itr.next();
+						this.operations += m.get(item).getOperations();
+						this.partialoperations += m.get(item).getOperations();
+						this.totaldata.get(item).add(m.get(item));
+						this.partialdata.get(item).add(m.get(item));
+					}
+				}
+			}
+		}
+	}
+	
+	public synchronized HashMap<String, OneMeasurement> getPartialData() {
+		if (partialdata == null)
+			System.out.println("Partial Data is NULL");
+		return partialdata;
+	}
+	
+	public synchronized HashMap<String, OneMeasurement> getAndResetPartialData() {
+		HashMap<String, OneMeasurement> m = partialdata;
+		partialdata = new HashMap<String, OneMeasurement>();
+		return m;
 	}
 
 	/**
 	 * Report a return code for a single DB operaiton.
 	 */
 	public void reportReturnCode(String operation, int code) {
-		if (!data.containsKey(operation)) {
+		if (!totaldata.containsKey(operation)) {
 			synchronized (this) {
-				if (!data.containsKey(operation)) {
-					data.put(operation, constructOneMeasurement(operation));
+				if (!totaldata.containsKey(operation)) {
+					totaldata.put(operation, constructOneMeasurement(operation));
 				}
 			}
 		}
-		data.get(operation).reportReturnCode(code);
+		totaldata.get(operation).reportReturnCode(code);
 	}
 
 	/**
@@ -127,7 +149,7 @@ public class Measurements {
 	 */
 	public void exportMeasurements(MeasurementsExporter exporter)
 			throws IOException {
-		for (OneMeasurement measurement : data.values()) {
+		for (OneMeasurement measurement : totaldata.values()) {
 			measurement.exportMeasurements(exporter);
 		}
 	}
@@ -135,12 +157,15 @@ public class Measurements {
 	/**
 	 * Return a one line summary of the measurements.
 	 */
-	public String getSummary() {
-		String ret = "";
-		for (OneMeasurement m : data.values()) {
+	public synchronized String getSummary() {
+		int interval = Integer.parseInt(_props.getProperty(Client.PRINT_STATS_INTERVAL, Client.PRINT_STATS_INTERVAL_DEFAULT));
+		
+		String ret = " " + operations + " operations; " + (partialoperations / interval) + " ops/sec";
+		for (OneMeasurement m : partialdata.values()) {
 			ret += m.getSummary() + " ";
 		}
-
+		partialoperations = 0;
+		getAndResetPartialData();
 		return ret;
 	}
 }
