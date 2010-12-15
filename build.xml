@@ -124,7 +124,7 @@
    	
    <target name="slave">
 	  <exec executable="java" >
-	  	<arg value="-Djava.rmi.server.hostname=10.1.5.103" />
+	  	<arg value="-Djava.rmi.server.hostname=localhost" />
 	  	<arg value="-Djava.security.policy=server.policy" />
 	  	<arg value="-Xms128m" />
 	  	<arg value="-Xmx256m" />
