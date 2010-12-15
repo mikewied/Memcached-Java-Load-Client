@@ -78,5 +78,9 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 	public void setStatus(int status) {
 		client.status = status;
 	}
+	
+	public static void main(String args[]) {
+		SlaveClient client = getSlaveClient();
+	}
 }
 
