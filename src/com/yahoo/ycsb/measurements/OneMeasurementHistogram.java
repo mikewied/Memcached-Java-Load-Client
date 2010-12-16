@@ -113,8 +113,9 @@ public class OneMeasurementHistogram extends OneMeasurement {
 		totallatency += ((OneMeasurementHistogram)m).totallatency;
 		
 		for (int i = 0; i < BUCKETS; i++) {
-			histogram[i] += ((OneMeasurementHistogram)m).histogram[i];
-			operations += ((OneMeasurementHistogram)m).histogram[i];
+			System.out.println("org: " + histogram[i] + " new: " + ((OneMeasurementHistogram)m).histogram[i] + " total: " + (histogram[i]  + ((OneMeasurementHistogram)m).histogram[i]));
+			this.histogram[i] += ((OneMeasurementHistogram)m).histogram[i];
+			this.operations += ((OneMeasurementHistogram)m).histogram[i];
 		}
 	}
 

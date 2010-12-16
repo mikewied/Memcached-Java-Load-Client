@@ -130,9 +130,10 @@ public class LoadThread extends Thread {
 
 		long en = System.currentTimeMillis();
 
+		/*
 		if (proppkg.slave) {
 			statusthread.interrupt();
-		}
+		}*/
 
 		try {
 			workload.cleanup();

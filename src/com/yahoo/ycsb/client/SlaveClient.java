@@ -1,5 +1,7 @@
 package com.yahoo.ycsb.client;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -24,6 +26,7 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 		
 		try {
             RMIInterface stub = (RMIInterface) UnicastRemoteObject.exportObject(this, 0);
+            LocateRegistry.createRegistry(1099);
             Registry registry = LocateRegistry.getRegistry();
             registry.rebind(REGISTRY_NAME, stub);
         } catch (Exception e) {
@@ -80,6 +83,14 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 	}
 	
 	public static void main(String args[]) {
+		try {
+		    InetAddress addr = InetAddress.getLocalHost();
+		    System.out.println("Binding to: " + addr.getHostAddress());
+		    System.setProperty("java.rmi.server.hostname", addr.getHostAddress());
+		} catch (UnknownHostException e) {
+			System.out.println("I can't get my IP address");
+		}
+		
 		SlaveClient client = getSlaveClient();
 	}
 }

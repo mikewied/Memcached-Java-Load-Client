@@ -63,10 +63,10 @@ public class SpymemcachedClient extends Memcached {
 			e1.printStackTrace();
 		}
 	}
-	
+	/*
 	public void cleanup() {
 		client.shutdown();
-	}
+	}*/
 	
 	@Override
 	public int add(String key, Object value) {
