@@ -168,4 +168,8 @@ public class Measurements {
 		getAndResetPartialData();
 		return ret;
 	}
+	
+	public long getOperations() {
+		return operations;
+	}
 }

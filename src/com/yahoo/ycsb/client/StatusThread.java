@@ -1,5 +1,8 @@
 package com.yahoo.ycsb.client;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -7,11 +10,15 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.OneMeasurement;
+import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
+import com.yahoo.ycsb.rmi.PropertyPackage;
 import com.yahoo.ycsb.rmi.RMIInterface;
 
 /**
@@ -22,6 +29,7 @@ import com.yahoo.ycsb.rmi.RMIInterface;
  * 
  */
 public class StatusThread extends Thread {
+	PropertyPackage proppkg;
 	HashMap<String, Registry> rmiClients;
 	Vector<Thread> _threads;
 	String _label;
@@ -33,8 +41,9 @@ public class StatusThread extends Thread {
 	 */
 	
 
-	public StatusThread(LoadThread lt, HashMap<String, Registry> rmiClients) {
+	public StatusThread(LoadThread lt, HashMap<String, Registry> rmiClients, PropertyPackage proppkg) {
 		this.rmiClients = rmiClients;
+		this.proppkg = proppkg;
 		_threads = lt.threads;
 		_label = lt.proppkg.label;
 		_printstatsinterval = 5;
@@ -45,6 +54,7 @@ public class StatusThread extends Thread {
 	 */
 	public void run() {
 		long st = System.currentTimeMillis();
+		long en;
 		boolean alldone;
 
 		do {
@@ -78,7 +88,7 @@ public class StatusThread extends Thread {
 				}
 			}
 
-			long en = System.currentTimeMillis();
+			en = System.currentTimeMillis();
 			long interval = en - st;
 			System.err.println(_label + " " + (interval / 1000) + " sec: " + Measurements.getMeasurements().getSummary() + "\n");
 
@@ -87,5 +97,57 @@ public class StatusThread extends Thread {
 			} catch (InterruptedException e) {}
 
 		} while (!alldone);
+		
+		try {
+			exportMeasurements(proppkg.props, en - st);
+		} catch (IOException e) {
+			System.err.println("Could not export measurements, error: "+ e.getMessage());
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
+	
+	/**
+	 * Exports the measurements to either sysout or a file using the exporter
+	 * loaded from conf.
+	 * 
+	 * @throws IOException
+	 *             Either failed to write to output stream or failed to close
+	 *             it.
+	 */
+	private void exportMeasurements(Properties props, long runtime) throws IOException {
+		MeasurementsExporter exporter = null;
+		try {
+			// if no destination file is provided the results will be written to stdout
+			OutputStream out;
+			String exportFile = props.getProperty("exportfile");
+			long opcount = Measurements.getMeasurements().getOperations();
+			if (exportFile == null) {
+				out = System.out;
+			} else {
+				out = new FileOutputStream(exportFile);
+			}
+
+			// if no exporter is provided the default text one will be used
+			String exporterStr = props.getProperty("exporter", "com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
+			try {
+				exporter = (MeasurementsExporter) Class.forName(exporterStr)
+						.getConstructor(OutputStream.class).newInstance(out);
+			} catch (Exception e) {
+				System.err.println("Could not find exporter " + exporterStr + ", will use default text reporter.");
+				e.printStackTrace();
+				exporter = new TextMeasurementsExporter(out);
+			}
+
+			exporter.write("OVERALL", "RunTime(ms)", runtime);
+			double throughput = 1000.0 * ((double) opcount) / ((double) runtime);
+			exporter.write("OVERALL", "Throughput(ops/sec)", throughput);
+			
+			Measurements.getMeasurements().exportMeasurements(exporter);
+		} finally {
+			if (exporter != null) {
+				exporter.close();
+			}
+		}
 	}
 }

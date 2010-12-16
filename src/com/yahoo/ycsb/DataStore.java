@@ -37,4 +37,7 @@ public abstract class DataStore {
 	 */
 	public void cleanup() throws DataStoreException {
 	}
+	
+	public void shutdown() throws DataStoreException {
+	}
 }

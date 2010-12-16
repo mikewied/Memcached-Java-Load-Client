@@ -98,7 +98,7 @@ public class MasterClient extends Client implements ClientStatus{
 		}
 		thread = new LoadThread(proppkg);
 		thread.start();
-		StatusThread status = new StatusThread(thread, rmiClients);
+		StatusThread status = new StatusThread(thread, rmiClients, proppkg);
 		status.start();
 		
 		try {

@@ -19,7 +19,9 @@ package com.yahoo.ycsb.measurements;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
@@ -111,9 +113,7 @@ public class OneMeasurementHistogram extends OneMeasurement {
 	public synchronized void add(OneMeasurement m) {
 		operations += histogramoverflow;
 		totallatency += ((OneMeasurementHistogram)m).totallatency;
-		
 		for (int i = 0; i < BUCKETS; i++) {
-			System.out.println("org: " + histogram[i] + " new: " + ((OneMeasurementHistogram)m).histogram[i] + " total: " + (histogram[i]  + ((OneMeasurementHistogram)m).histogram[i]));
 			this.histogram[i] += ((OneMeasurementHistogram)m).histogram[i];
 			this.operations += ((OneMeasurementHistogram)m).histogram[i];
 		}
@@ -121,16 +121,16 @@ public class OneMeasurementHistogram extends OneMeasurement {
 
 	@Override
 	public void exportMeasurements(MeasurementsExporter exporter) throws IOException {
-		double mean = (((double) totallatency) / ((double) operations));
-		double stddev = Math.sqrt(stddev_pts/operations);
+		int mean = (int) (totallatency / operations);
+		//double stddev = Math.sqrt(stddev_pts/operations);
 		exporter.write(getName(), "Operations", operations);
-		exporter.write(getName(), "AverageLatency(us)", mean);
-		exporter.write(getName(), "Standard Deviation", stddev);
-		exporter.write(getName(), "MinLatency(us)", min);
-		exporter.write(getName(), "MaxLatency(us)", max);
-		exporter.write(getName(), "95thPercentileLatency(us)", getPercentile(histogram, .95));
-		exporter.write(getName(), "99thPercentileLatency(us)", getPercentile(histogram, .99));
-		exporter.write(getName(), "99.9thPercentileLatency(us)", getPercentile(histogram, .999));
+		exporter.write(getName(), "AverageLatency", computeTime(mean));
+		//exporter.write(getName(), "Standard Deviation", stddev);
+		exporter.write(getName(), "MinLatency", computeTime(min));
+		exporter.write(getName(), "MaxLatency", computeTime(max));
+		exporter.write(getName(), "95thPercentileLatency", computeTime((int)getPercentile(histogram, .95)));
+		exporter.write(getName(), "99thPercentileLatency", computeTime((int)getPercentile(histogram, .99)));
+		exporter.write(getName(), "99.9thPercentileLatency", computeTime((int)getPercentile(histogram, .999)));
 		
 		for (Integer I : returncodes.keySet()) {
 			int[] val = returncodes.get(I);

@@ -21,6 +21,7 @@ import java.io.*;
 import java.util.*;
 
 import com.yahoo.ycsb.DataStore;
+import com.yahoo.ycsb.DataStoreException;
 import com.yahoo.ycsb.UnknownDataStoreException;
 import com.yahoo.ycsb.Workload;
 import com.yahoo.ycsb.WorkloadException;
@@ -43,12 +44,14 @@ public class LoadThread extends Thread {
 	public PropertyPackage proppkg;
 	private Thread statusthread;
 	public Vector<Thread> threads;
+	DataStore db;
 	
 	public LoadThread(PropertyPackage proppkg) {
 		this.proppkg = proppkg;
 		workload = null;
 		statusthread = null;
 		threads = new Vector<Thread>();
+		db = null;
 		init();
 	}
 		
@@ -93,7 +96,6 @@ public class LoadThread extends Thread {
 		// Initialize the database
 		String protocol = proppkg.props.getProperty(Client.PROTOCOL_PROPERTY);
 		for (int threadid = 0; threadid < threadcount; threadid++) {
-			DataStore db = null;
 			try {
 				if (protocol.equals("memcached"))
 					db = MemcachedFactory.newMemcached(dbname, proppkg.props);
@@ -138,60 +140,14 @@ public class LoadThread extends Thread {
 		try {
 			workload.cleanup();
 		} catch (WorkloadException e) {
-			e.printStackTrace();
 			e.printStackTrace(System.out);
 			System.exit(0);
 		}
-
+		
 		try {
-			exportMeasurements(proppkg.props, opcount, en - st);
-		} catch (IOException e) {
-			System.err.println("Could not export measurements, error: "+ e.getMessage());
+			db.shutdown();
+		} catch (DataStoreException e) {
 			e.printStackTrace();
-			System.exit(-1);
-		}
-	}
-
-	/**
-	 * Exports the measurements to either sysout or a file using the exporter
-	 * loaded from conf.
-	 * 
-	 * @throws IOException
-	 *             Either failed to write to output stream or failed to close
-	 *             it.
-	 */
-	private void exportMeasurements(Properties props, int opcount, long runtime) throws IOException {
-		MeasurementsExporter exporter = null;
-		try {
-			// if no destination file is provided the results will be written to stdout
-			OutputStream out;
-			String exportFile = props.getProperty("exportfile");
-			if (exportFile == null) {
-				out = System.out;
-			} else {
-				out = new FileOutputStream(exportFile);
-			}
-
-			// if no exporter is provided the default text one will be used
-			String exporterStr = props.getProperty("exporter", "com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
-			try {
-				exporter = (MeasurementsExporter) Class.forName(exporterStr)
-						.getConstructor(OutputStream.class).newInstance(out);
-			} catch (Exception e) {
-				System.err.println("Could not find exporter " + exporterStr + ", will use default text reporter.");
-				e.printStackTrace();
-				exporter = new TextMeasurementsExporter(out);
-			}
-
-			exporter.write("OVERALL", "RunTime(ms)", runtime);
-			double throughput = 1000.0 * ((double) opcount) / ((double) runtime);
-			exporter.write("OVERALL", "Throughput(ops/sec)", throughput);
-
-			Measurements.getMeasurements().exportMeasurements(exporter);
-		} finally {
-			if (exporter != null) {
-				exporter.close();
-			}
 		}
 	}
 }

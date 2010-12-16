@@ -22,7 +22,7 @@ import com.yahoo.ycsb.memcached.Memcached;
 
 
 public class SpymemcachedClient extends Memcached {
-	public static MemcachedClient client;
+	MemcachedClient client;
 	public static final String VERBOSE = "memcached.verbose";
 	public static final String VERBOSE_DEFAULT = "true";
 
@@ -54,6 +54,7 @@ public class SpymemcachedClient extends Memcached {
 		membaseport = Integer.parseInt(getProperties().getProperty(MEMBASE_PORT, MEMBASE_PORT_DEFAULT));
 
 		String addr = "10.2.1.11";//getProperties().getProperty("memcached.address");
+		
 		try {
 			InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), membaseport);
 			client = new MemcachedClient(ia);
@@ -63,10 +64,11 @@ public class SpymemcachedClient extends Memcached {
 			e1.printStackTrace();
 		}
 	}
-	/*
+	
 	public void cleanup() {
-		client.shutdown();
-	}*/
+		if (client.isAlive())
+			client.shutdown();
+	}
 	
 	@Override
 	public int add(String key, Object value) {
@@ -97,8 +99,10 @@ public class SpymemcachedClient extends Memcached {
 		} catch (ExecutionException e) {
 			System.out.println("GET Execution");
 			e.printStackTrace();
+			return -2;
 		} catch (RuntimeException e) {
 			System.out.println("GET Runtime");
+			return -3;
 		}
 		//System.out.println("Start: " + time);
 		//System.out.println("Start: " + endtime);
