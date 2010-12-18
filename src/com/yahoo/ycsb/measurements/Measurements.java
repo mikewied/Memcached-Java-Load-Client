@@ -105,7 +105,11 @@ public class Measurements {
 						String item = itr.next();
 						this.operations += m.get(item).getOperations();
 						this.partialoperations += m.get(item).getOperations();
+						if (!this.totaldata.containsKey(item))
+							this.totaldata.put(item, constructOneMeasurement(item));
 						this.totaldata.get(item).add(m.get(item));
+						if (!this.partialdata.containsKey(item))
+							this.partialdata.put(item, constructOneMeasurement(item));
 						this.partialdata.get(item).add(m.get(item));
 					}
 				}
@@ -134,9 +138,13 @@ public class Measurements {
 				if (!totaldata.containsKey(operation)) {
 					totaldata.put(operation, constructOneMeasurement(operation));
 				}
+				if (!partialdata.containsKey(operation)) {
+					partialdata.put(operation, constructOneMeasurement(operation));
+				}
 			}
 		}
 		totaldata.get(operation).reportReturnCode(code);
+		partialdata.get(operation).reportReturnCode(code);
 	}
 
 	/**

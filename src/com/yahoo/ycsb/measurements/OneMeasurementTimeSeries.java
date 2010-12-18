@@ -179,4 +179,10 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	@Override
+	public HashMap<Integer, int[]> getReturnCodes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

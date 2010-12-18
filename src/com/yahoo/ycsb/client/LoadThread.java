@@ -17,19 +17,14 @@
 
 package com.yahoo.ycsb.client;
 
-import java.io.*;
 import java.util.*;
 
 import com.yahoo.ycsb.DataStore;
-import com.yahoo.ycsb.DataStoreException;
 import com.yahoo.ycsb.UnknownDataStoreException;
 import com.yahoo.ycsb.Workload;
 import com.yahoo.ycsb.WorkloadException;
 import com.yahoo.ycsb.database.DBFactory;
 import com.yahoo.ycsb.measurements.Measurements;
-import com.yahoo.ycsb.measurements.OneMeasurement;
-import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
-import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
 import com.yahoo.ycsb.memcached.MemcachedFactory;
 //import org.apache.log4j.BasicConfigurator;
 import com.yahoo.ycsb.rmi.PropertyPackage;
@@ -42,16 +37,14 @@ public class LoadThread extends Thread {
 	static long printstatsinterval;
 	Workload workload;
 	public PropertyPackage proppkg;
-	private Thread statusthread;
 	public Vector<Thread> threads;
-	DataStore db;
+	boolean slave;
 	
-	public LoadThread(PropertyPackage proppkg) {
+	public LoadThread(PropertyPackage proppkg, boolean slave) {
 		this.proppkg = proppkg;
 		workload = null;
-		statusthread = null;
 		threads = new Vector<Thread>();
-		db = null;
+		this.slave = slave;
 		init();
 	}
 		
@@ -71,13 +64,11 @@ public class LoadThread extends Thread {
 			targetperthreadperms = targetperthread / 1000.0;
 		}
 
-		// set up measurements
 		Measurements.setProperties(proppkg.props);
 
-		// load the workload
 		ClassLoader classLoader = Client.class.getClassLoader();
-
 		try {
+			@SuppressWarnings("rawtypes")
 			Class workloadclass = classLoader.loadClass(workloadloc);
 			workload = (Workload) workloadclass.newInstance();
 		} catch (Exception e) {
@@ -93,9 +84,9 @@ public class LoadThread extends Thread {
 			System.exit(0);
 		}
 
-		// Initialize the database
 		String protocol = proppkg.props.getProperty(Client.PROTOCOL_PROPERTY);
 		for (int threadid = 0; threadid < threadcount; threadid++) {
+			DataStore db = null;
 			try {
 				if (protocol.equals("memcached"))
 					db = MemcachedFactory.newMemcached(dbname, proppkg.props);
@@ -115,10 +106,6 @@ public class LoadThread extends Thread {
 	}
 	
 	public void run() {
-		int opcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.OP_COUNT));
-		printstatsinterval = Long.parseLong(proppkg.props.getProperty(Client.PRINT_STATS_INTERVAL, Client.PRINT_STATS_INTERVAL_DEFAULT));
-		
-		long st = System.currentTimeMillis();
 
 		for (Thread t : threads) {
 			t.start();
@@ -129,25 +116,19 @@ public class LoadThread extends Thread {
 				t.join();
 			} catch (InterruptedException e) {}
 		}
-
-		long en = System.currentTimeMillis();
-
-		/*
-		if (proppkg.slave) {
-			statusthread.interrupt();
-		}*/
+		
+		if (slave) {
+			try {
+				sleep(printstatsinterval * 1500);
+			} catch (InterruptedException e) {
+			}
+		}
 
 		try {
 			workload.cleanup();
 		} catch (WorkloadException e) {
 			e.printStackTrace(System.out);
 			System.exit(0);
-		}
-		
-		try {
-			db.shutdown();
-		} catch (DataStoreException e) {
-			e.printStackTrace();
 		}
 	}
 }

@@ -7,18 +7,17 @@ import java.util.Properties;
 
 import com.yahoo.ycsb.client.Client;
 import com.yahoo.ycsb.client.MasterClient;
-import com.yahoo.ycsb.client.SlaveClient;
 import com.yahoo.ycsb.rmi.PropertyPackage;
 
 public class LoadGenerator {
 
+	@SuppressWarnings("rawtypes")
 	public static void main(String[] args) {
 		Properties props = new Properties();
 		Properties fileprops = new Properties();
 		boolean dotransactions = true;
 		int threadcount = 1;
 		int target = 0;
-		boolean status = false;
 		boolean slave = false;
 		String label = "";
 		int argindex = 0;
@@ -46,9 +45,6 @@ public class LoadGenerator {
 				argindex++;
 			} else if (args[argindex].compareTo("-t") == 0) {
 				dotransactions = true;
-				argindex++;
-			} else if (args[argindex].compareTo("-s") == 0) {
-				status = true;
 				argindex++;
 			} else if (args[argindex].compareTo("-slave") == 0) {
 				slave = true;
@@ -124,6 +120,7 @@ public class LoadGenerator {
 		props = fileprops;
 		
 		MasterClient client = new MasterClient(new PropertyPackage(props, dotransactions, threadcount, target, slave, label));
+		client.setupSlaves();
 		client.execute();
 	}
 	

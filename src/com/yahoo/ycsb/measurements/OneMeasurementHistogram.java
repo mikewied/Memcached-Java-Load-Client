@@ -117,17 +117,29 @@ public class OneMeasurementHistogram extends OneMeasurement {
 			this.histogram[i] += ((OneMeasurementHistogram)m).histogram[i];
 			this.operations += ((OneMeasurementHistogram)m).histogram[i];
 		}
+		
+		Iterator<Integer> itr = m.getReturnCodes().keySet().iterator();
+		while (itr.hasNext()) {
+			Integer item = itr.next();
+			if (!this.returncodes.containsKey(item)) {
+				this.returncodes.put(item, m.getReturnCodes().get(item));
+			} else {
+				int[] newcodes = new int[1];
+				newcodes[0] = returncodes.get(item)[0] + m.getReturnCodes().get(item)[0];
+				returncodes.put(item, newcodes);
+			}
+		}
 	}
 
 	@Override
 	public void exportMeasurements(MeasurementsExporter exporter) throws IOException {
-		int mean = (int) (totallatency / operations);
+		double mean = ((double)totallatency / (double)operations);
 		//double stddev = Math.sqrt(stddev_pts/operations);
 		exporter.write(getName(), "Operations", operations);
 		exporter.write(getName(), "AverageLatency", computeTime(mean));
 		//exporter.write(getName(), "Standard Deviation", stddev);
-		exporter.write(getName(), "MinLatency", computeTime(min));
-		exporter.write(getName(), "MaxLatency", computeTime(max));
+		exporter.write(getName(), "MinLatency", computeTime((double)min));
+		exporter.write(getName(), "MaxLatency", computeTime((double)max));
 		exporter.write(getName(), "95thPercentileLatency", computeTime((int)getPercentile(histogram, .95)));
 		exporter.write(getName(), "99thPercentileLatency", computeTime((int)getPercentile(histogram, .99)));
 		exporter.write(getName(), "99.9thPercentileLatency", computeTime((int)getPercentile(histogram, .999)));
@@ -163,20 +175,6 @@ public class OneMeasurementHistogram extends OneMeasurement {
 		return "[" + getName() + " total=" + operations + "  avg=" + avg + " 99th=" + p99 + "]";
 	}
 	
-	public String computeTime(int time) {
-		int i;
-		for (i = 0; time > 1024 && i < 2; i++)
-			time = time / 1024;
-		
-		if (i == 0)
-			return String.format("%-6s", (Integer.toString(time) + "us"));
-		else if (i == 1)
-			return String.format("%-6s", (Integer.toString(time) + "ms"));
-		else
-			return String.format("%-6s", (Integer.toString(time) + "s"));
-		
-	}
-	
 	public double getPercentile(int[] data, double percentile) {
 		int i;
 		int opcounter = 0;
@@ -190,5 +188,6 @@ public class OneMeasurementHistogram extends OneMeasurement {
 	}
 	
 	public long getOperations() { return operations; }
-
+	
+	public HashMap<Integer, int[]> getReturnCodes() { return returncodes; }
 }

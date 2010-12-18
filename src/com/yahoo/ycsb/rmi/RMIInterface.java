@@ -15,5 +15,7 @@ public interface RMIInterface extends Remote {
 	
 	public HashMap<String, OneMeasurement> getCurrentStats() throws RemoteException;
 	
+	public void shutdown() throws RemoteException;
+	
 	public int setProperties(PropertyPackage proppkg) throws RemoteException;
 }

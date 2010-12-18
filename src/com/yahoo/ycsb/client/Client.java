@@ -17,10 +17,6 @@
 
 package com.yahoo.ycsb.client;
 
-import java.util.HashMap;
-
-import com.yahoo.ycsb.measurements.Measurements;
-import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.rmi.PropertyPackage;
 
 //import org.apache.log4j.BasicConfigurator;
@@ -47,14 +43,6 @@ public abstract class Client {
 	public Client(PropertyPackage proppkg) {
 		this.proppkg = proppkg;
 	}
-	
-	
-	public abstract int getStatus();
-	
-	public abstract int setProperties(PropertyPackage proppkg);
-	
-	public abstract HashMap<String, OneMeasurement> getCurrentStats();
-
 
 	public abstract void execute();
 	

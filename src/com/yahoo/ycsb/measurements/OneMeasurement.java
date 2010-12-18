@@ -19,6 +19,7 @@ package com.yahoo.ycsb.measurements;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
 
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
@@ -49,6 +50,8 @@ public abstract class OneMeasurement implements Serializable {
 
 	public abstract long getOperations();
 	
+	public abstract HashMap<Integer, int[]> getReturnCodes();
+	
 	public abstract String getSummary();
 
 	/**
@@ -61,4 +64,33 @@ public abstract class OneMeasurement implements Serializable {
 	 */
 	public abstract void exportMeasurements(MeasurementsExporter exporter)
 			throws IOException;
+	
+	public String computeTime(double time) {
+		int i;
+		for (i = 0; time > 1024 && i < 2; i++)
+			time = time / 1024;
+		
+		time = Math.round(time * 100) / 100.0;
+		if (i == 0)
+			return String.format("%-6s", (Double.toString(time) + "us"));
+		else if (i == 1)
+			return String.format("%-6s", (Double.toString(time) + "ms"));
+		else
+			return String.format("%-6s", (Double.toString(time) + "s"));
+		
+	}
+	
+	public String computeTime(int time) {
+		int i;
+		for (i = 0; time > 1024 && i < 2; i++)
+			time = time / 1024;
+		
+		if (i == 0)
+			return String.format("%-6s", (Integer.toString(time) + "us"));
+		else if (i == 1)
+			return String.format("%-6s", (Integer.toString(time) + "ms"));
+		else
+			return String.format("%-6s", (Integer.toString(time) + "s"));
+		
+	}
 }

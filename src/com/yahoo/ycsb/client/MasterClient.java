@@ -8,33 +8,28 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.yahoo.ycsb.client.Client;
 import com.yahoo.ycsb.client.LoadThread;
-import com.yahoo.ycsb.measurements.Measurements;
-import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.rmi.PropertyPackage;
 import com.yahoo.ycsb.rmi.RMIInterface;
 
-public class MasterClient extends Client implements ClientStatus{
-	LoadThread thread;
-	String[] address;
-	
-	// Maps IP addresses to registry instances
+public class MasterClient implements ClientStatus{
+	PropertyPackage proppkg;
+	LoadThread lt;
+	StatusThread st;
 	HashMap<String, Registry> rmiClients;
 	
-	
 	public MasterClient(PropertyPackage proppkg) {
-		super(proppkg);
-		System.out.println("Client Type: Master");
+		String[] address;
+		String addresses;
+		
+		lt = null;
+		st = null;
+		this.proppkg = proppkg;
 		rmiClients = new HashMap<String, Registry>();
+		addresses  = proppkg.props.getProperty("slaveaddress", null);
 		
-		String addresses  = proppkg.props.getProperty("slaveaddress", null);
-		if (addresses != null)
+		if (addresses != null) {
 			address = addresses.split(",");
-		else
-			address = null;
-		
-		if (address != null) {
 			for (int i = 0; i < address.length; i++) {
 				try {
 		            Registry registry = LocateRegistry.getRegistry(address[i]);
@@ -45,11 +40,10 @@ public class MasterClient extends Client implements ClientStatus{
 		            System.err.println("Could not connect to slave client at " + address[i]);
 		        }
 			}
-	        setupSlaves();
 		}
 	}
 	
-	private void setupSlaves() {
+	public void setupSlaves() {
 		int res;
 		boolean dotransactions = Boolean.parseBoolean(proppkg.getProperty(PropertyPackage.DO_TRANSACTIONS));
 		int threadcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.THREAD_COUNT));
@@ -76,10 +70,8 @@ public class MasterClient extends Client implements ClientStatus{
 		}
 	}
 	
-	@Override
 	public void execute() {
 		int res;
-		
 		Set<String> keys = rmiClients.keySet();
 		Iterator<String> itr = keys.iterator();
 		
@@ -96,27 +88,33 @@ public class MasterClient extends Client implements ClientStatus{
 				System.out.println("Could not run test with " + key + " because slave is not running");
 			}
 		}
-		thread = new LoadThread(proppkg);
-		thread.start();
-		StatusThread status = new StatusThread(thread, rmiClients, proppkg);
-		status.start();
+		lt = new LoadThread(proppkg, false);
+		st = new StatusThread(lt, rmiClients, proppkg);
+		st.start();
 		
 		try {
-			thread.join();
-			status.join();
+			st.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public HashMap<String, OneMeasurement> getCurrentStats() {
-		return null;
+		shutdownSlaves();
 	}
 	
-	@Override
-	public int setProperties(PropertyPackage proppkg) {
-		return 0;
+	public void shutdownSlaves() {
+		Set<String> keys = rmiClients.keySet();
+		Iterator<String> itr = keys.iterator();
+		
+		while (itr.hasNext()) {
+			String key = itr.next();
+			try {
+				RMIInterface loadgen = (RMIInterface) rmiClients.get(key).lookup(SlaveClient.REGISTRY_NAME);
+				loadgen.shutdown();
+			} catch (NotBoundException e) {
+				System.out.println("Could not run test with " + key + " because slave was not bound");
+			}catch (RemoteException e) {
+				System.out.println("Could not run test with " + key + " because slave is not running");
+			}
+		}
 	}
 
 	@Override

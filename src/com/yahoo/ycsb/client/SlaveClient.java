@@ -2,6 +2,9 @@ package com.yahoo.ycsb.client;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.AccessException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -17,17 +20,18 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 	private static SlaveClient client = null;
 	
 	private int status;
-	private LoadThread thread;
+	private LoadThread lt;
 	private PropertyPackage proppkg;
+	private Registry registry;
 
 	private SlaveClient() {
 		status = NOT_STARTED;
-		thread = null;
+		lt = null;
 		
 		try {
             RMIInterface stub = (RMIInterface) UnicastRemoteObject.exportObject(this, 0);
             LocateRegistry.createRegistry(1099);
-            Registry registry = LocateRegistry.getRegistry();
+            registry = LocateRegistry.getRegistry();
             registry.rebind(REGISTRY_NAME, stub);
         } catch (Exception e) {
             System.err.println("ComputeEngine exception:");
@@ -45,10 +49,12 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 	
 	@Override
 	public HashMap<String, OneMeasurement> getCurrentStats() {
-		if (thread != null && thread.getState() != Thread.State.TERMINATED)
+		if (lt != null && lt.getState() != Thread.State.TERMINATED) {
+			System.out.println("Ops Done: " + Measurements.getMeasurements().getOperations());
 			return Measurements.getMeasurements().getAndResetPartialData();
-		else
+		} else {
 			return null;
+		}
 	}
 	
 	@Override
@@ -64,12 +70,13 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 	public int execute() {
 		if (client.proppkg == null)
 			return -2;
-		if (client.thread == null || client.thread.getState() == Thread.State.TERMINATED)
-			client.thread = new LoadThread(client.proppkg);
-		else
+		if (lt == null || lt.getState() == Thread.State.TERMINATED) {
+			lt = new LoadThread(proppkg, true);
+		} else {
 			return -1;
-		client.status = RUNNING;
-		client.thread.start();
+		}
+		status = RUNNING;
+		lt.start();
 		return 0;
 	}
 
@@ -82,6 +89,20 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 		client.status = status;
 	}
 	
+	public void shutdown() {
+		try {
+			registry.unbind(REGISTRY_NAME);
+			UnicastRemoteObject.unexportObject(this, true);
+		} catch (AccessException e) {
+			e.printStackTrace();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unused")
 	public static void main(String args[]) {
 		try {
 		    InetAddress addr = InetAddress.getLocalHost();
