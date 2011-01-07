@@ -75,7 +75,7 @@ public class ClientThread extends Thread {
 		} catch (DataStoreException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
-			return;
+			System.exit(0);
 		}
 
 		try {

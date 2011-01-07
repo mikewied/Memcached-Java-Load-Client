@@ -1,0 +1,31 @@
+[OVERALL] RunTime(ms), 185018.0
+[OVERALL] Throughput(ops/sec), 5404.879525235382
+[GET] Operations, 1000000
+[GET] AverageLatency, 727.31us
+[GET] MinLatency, 522.0us
+[GET] MaxLatency, 20.67ms
+[GET] 95thPercentileLatency, 2ms   
+[GET] 99thPercentileLatency, 2ms   
+[GET] 99.9thPercentileLatency, 4ms   
+[GET] Return=0, 1000000
+[GET] 0us    - 256us , 0
+[GET] 256us  - 512us , 0
+[GET] 512us  - 1024us, 992284
+[GET] 1024us - 2ms   , 7190
+[GET] 2ms    - 4ms   , 478
+[GET] 4ms    - 8ms   , 39
+[GET] 8ms    - 16ms  , 5
+[GET] 16ms   - 32ms  , 4
+[GET] 32ms   - 64ms  , 0
+[GET] 64ms   - 128ms , 0
+[GET] 128ms  - 256ms , 0
+[GET] 256ms  - 512ms , 0
+[GET] 512ms  - 1024ms, 0
+[GET] 1024ms - 2s    , 0
+[GET] 2s     - 4s    , 0
+[GET] 4s     - 8s    , 0
+[GET] 8s     - 16s   , 0
+[GET] 16s    - 32s   , 0
+[GET] 32s    - 64s   , 0
+[GET] 64s    - 128s  , 0
+[GET] >128s  , 0

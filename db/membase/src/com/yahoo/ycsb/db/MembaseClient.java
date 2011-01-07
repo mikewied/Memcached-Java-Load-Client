@@ -5,18 +5,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import net.spy.memcached.CASResponse;
-import net.spy.memcached.CachedData;
 import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.ops.GetOperation;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.OperationStatus;
-import net.spy.memcached.transcoders.Transcoder;
 
 import com.yahoo.ycsb.memcached.Memcached;
 

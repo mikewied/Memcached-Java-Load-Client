@@ -152,7 +152,6 @@ public class LoadGenerator {
 		System.out.println("  -p name=value:  specify a property to be passed to the DB and workloads;");
 		System.out.println("                  multiple properties can be specified, and override any");
 		System.out.println("                  values in the propertyfile");
-		System.out.println("  -s:  show status during run (default: no status)");
 		System.out.println("  -l label:  use label for status (e.g. to label one experiment out of a whole batch)");
 		System.out.println("");
 		System.out.println("Required properties:");

@@ -28,9 +28,9 @@ public class MasterClient implements MasterRMIInterface {
 	HashMap<String, Registry> rmiClients;
 	
 	private MasterClient() {
-		//super(null);
 		lt = null;
 		st = null;
+		registry = null;
 		rmiClients = new HashMap<String, Registry>();
 	}
 	
@@ -41,8 +41,9 @@ public class MasterClient implements MasterRMIInterface {
 	}
 	
 	public void init(Properties p) {
-		initRMI();
-		initSlaveRMI(p.getProperty("slaveaddress", null));
+		//initRMI();
+		if (Boolean.parseBoolean((String) p.get("dotransactions")))
+			initSlaveRMI(p.getProperty("slaveaddress", null));
 		this.props = new LoadProperties(p, rmiClients.size() + 1);
 	}
 	
@@ -53,8 +54,8 @@ public class MasterClient implements MasterRMIInterface {
             registry = LocateRegistry.getRegistry();
             registry.rebind(REGISTRY_NAME, stub);
         } catch (Exception e) {
-            System.err.println("SlaveRMI exception:");
-            e.printStackTrace();
+            System.err.println("MasterRMI Interface Cannot be created");
+            System.exit(0);
         }
 	}
 	
@@ -147,15 +148,17 @@ public class MasterClient implements MasterRMIInterface {
 	}
 	
 	public void shutdownMaster() {
-		try {
-			registry.unbind(REGISTRY_NAME);
-			UnicastRemoteObject.unexportObject(this, true);
-		} catch (AccessException e) {
-			e.printStackTrace();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			e.printStackTrace();
+		if (registry != null) {
+			try {
+				registry.unbind(REGISTRY_NAME);
+				UnicastRemoteObject.unexportObject(this, true);
+			} catch (AccessException e) {
+				e.printStackTrace();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -17,7 +17,7 @@ import com.yahoo.ycsb.rmi.SlaveRMIInterface;
 
 public class SlaveClient implements SlaveRMIInterface {
 	public static final String REGISTRY_NAME = "SlaveRMIInterface";
-	public static final int RMI_PORT = 1098;
+	public static final int RMI_PORT = 1099;
 	private static SlaveClient client = null;
 	
 	private LoadThread lt;
@@ -34,8 +34,8 @@ public class SlaveClient implements SlaveRMIInterface {
             registry = LocateRegistry.getRegistry();
             registry.rebind(REGISTRY_NAME, stub);
         } catch (Exception e) {
-            System.err.println("SlaveRMI exception:");
-            e.printStackTrace();
+            System.err.println("SlaveRMI interface cannot be created");
+            System.exit(0);
         }
 	}
 	

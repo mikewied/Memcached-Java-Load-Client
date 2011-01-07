@@ -54,6 +54,7 @@ public class LoadThread extends Thread {
 		int opcount = Integer.parseInt(props.getProperty(LoadProperties.OP_COUNT));
 		int threadcount = Integer.parseInt(props.getProperty(LoadProperties.THREAD_COUNT));
 		int target = Integer.parseInt(props.getProperty(LoadProperties.TARGET));
+		String protocol = props.getProperty(Client.PROTOCOL_PROPERTY);
 
 		// compute the target throughput
 		double targetperthreadperms = -1;
@@ -82,7 +83,7 @@ public class LoadThread extends Thread {
 			System.exit(0);
 		}
 
-		String protocol = props.getProperty(Client.PROTOCOL_PROPERTY);
+		
 		for (int threadid = 0; threadid < threadcount; threadid++) {
 			DataStore db = null;
 			try {
