@@ -27,7 +27,7 @@ import com.yahoo.ycsb.database.DBFactory;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.memcached.MemcachedFactory;
 //import org.apache.log4j.BasicConfigurator;
-import com.yahoo.ycsb.rmi.PropertyPackage;
+import com.yahoo.ycsb.rmi.LoadProperties;
 
 /**
  * Main class for executing YCSB.
@@ -36,26 +36,24 @@ public class LoadThread extends Thread {
 
 	static long printstatsinterval;
 	Workload workload;
-	public PropertyPackage proppkg;
+	public Properties props;
 	public Vector<Thread> threads;
-	boolean slave;
 	
-	public LoadThread(PropertyPackage proppkg, boolean slave) {
-		this.proppkg = proppkg;
+	public LoadThread(Properties props) {
+		this.props = props;
 		workload = null;
 		threads = new Vector<Thread>();
-		this.slave = slave;
 		init();
 	}
 		
 
 	public void init() {
-		String workloadloc = proppkg.getProperty(PropertyPackage.WORKLOAD);
-		String dbname = proppkg.getProperty(PropertyPackage.DB_NAME);
-		boolean dotransactions = Boolean.parseBoolean(proppkg.getProperty(PropertyPackage.DO_TRANSACTIONS));
-		int opcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.OP_COUNT));
-		int threadcount = Integer.parseInt(proppkg.getProperty(PropertyPackage.THREAD_COUNT));
-		int target = Integer.parseInt(proppkg.getProperty(PropertyPackage.TARGET));
+		String workloadloc = props.getProperty(LoadProperties.WORKLOAD);
+		String dbname = props.getProperty(LoadProperties.DB_NAME);
+		boolean dotransactions = Boolean.parseBoolean(props.getProperty(LoadProperties.DO_TRANSACTIONS));
+		int opcount = Integer.parseInt(props.getProperty(LoadProperties.OP_COUNT));
+		int threadcount = Integer.parseInt(props.getProperty(LoadProperties.THREAD_COUNT));
+		int target = Integer.parseInt(props.getProperty(LoadProperties.TARGET));
 
 		// compute the target throughput
 		double targetperthreadperms = -1;
@@ -64,7 +62,7 @@ public class LoadThread extends Thread {
 			targetperthreadperms = targetperthread / 1000.0;
 		}
 
-		Measurements.setProperties(proppkg.props);
+		Measurements.setProperties(props);
 
 		ClassLoader classLoader = Client.class.getClassLoader();
 		try {
@@ -77,21 +75,21 @@ public class LoadThread extends Thread {
 			System.exit(0);
 		}
 		try {
-			workload.init(proppkg.props);
+			workload.init(props);
 		} catch (WorkloadException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
 			System.exit(0);
 		}
 
-		String protocol = proppkg.props.getProperty(Client.PROTOCOL_PROPERTY);
+		String protocol = props.getProperty(Client.PROTOCOL_PROPERTY);
 		for (int threadid = 0; threadid < threadcount; threadid++) {
 			DataStore db = null;
 			try {
 				if (protocol.equals("memcached"))
-					db = MemcachedFactory.newMemcached(dbname, proppkg.props);
+					db = MemcachedFactory.newMemcached(dbname, props);
 				else if (protocol.equals("db"))
-					db = DBFactory.newDB(dbname, proppkg.props);
+					db = DBFactory.newDB(dbname, props);
 				else {
 					System.out.println("Invalid Protocol: " + protocol);
 					System.exit(0);
@@ -100,30 +98,31 @@ public class LoadThread extends Thread {
 				System.out.println("Unknown DB " + dbname);
 				System.exit(0);
 			}
-			Thread t = new ClientThread(db, dotransactions, workload, threadid, threadcount, proppkg.props, opcount / threadcount, targetperthreadperms);
+			Thread t = new ClientThread(db, dotransactions, workload, threadid, threadcount, props, opcount / threadcount, targetperthreadperms);
 			threads.add(t);
 		}
 	}
 	
 	public void run() {
-
+		// Start all of the worker threads
 		for (Thread t : threads) {
 			t.start();
 		}
-
+		// Wait for all of the worker threads to complete
 		for (Thread t : threads) {
 			try {
 				t.join();
 			} catch (InterruptedException e) {}
 		}
-		
-		if (slave) {
+		// Wait until the status thread grabs the last piece of stats data
+		while (Measurements.getMeasurements().getPartialData().size() > 0) {
 			try {
-				sleep(printstatsinterval * 1500);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
-
+		// Cleanup the worker threads workspace
 		try {
 			workload.cleanup();
 		} catch (WorkloadException e) {

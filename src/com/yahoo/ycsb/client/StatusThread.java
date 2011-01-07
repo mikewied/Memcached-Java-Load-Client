@@ -15,8 +15,8 @@ import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
-import com.yahoo.ycsb.rmi.PropertyPackage;
-import com.yahoo.ycsb.rmi.RMIInterface;
+import com.yahoo.ycsb.rmi.LoadProperties;
+import com.yahoo.ycsb.rmi.SlaveRMIInterface;
 
 /**
  * A thread to periodically show the status of the experiment, to reassure you
@@ -26,23 +26,18 @@ import com.yahoo.ycsb.rmi.RMIInterface;
  * 
  */
 public class StatusThread extends Thread {
-	PropertyPackage proppkg;
+	Properties props;
 	HashMap<String, Registry> rmiClients;
 	LoadThread lt;
 	String _label;
 	boolean _standardstatus;
 	long _printstatsinterval;
 
-	/**
-	 * The interval for reporting status.
-	 */
-	
-
-	public StatusThread(LoadThread lt, HashMap<String, Registry> rmiClients, PropertyPackage proppkg) {
+	public StatusThread(LoadThread lt, HashMap<String, Registry> rmiClients, Properties props) {
 		this.rmiClients = rmiClients;
-		this.proppkg = proppkg;
+		this.props = props;
 		this.lt = lt;
-		_label = lt.proppkg.label;
+		_label = props.getProperty(LoadProperties.LABEL);
 		_printstatsinterval = 5;
 	}
 
@@ -66,10 +61,11 @@ public class StatusThread extends Thread {
 					HashMap<String, OneMeasurement> res = null;
 					String key = itr.next();
 					try {
-						RMIInterface loadgen = (RMIInterface) rmiClients.get(key).lookup(SlaveClient.REGISTRY_NAME);
-						res = loadgen.getCurrentStats();
-						if (res != null && res.size() > 0) {
-							Measurements.getMeasurements().add(res);
+						SlaveRMIInterface loadgen = (SlaveRMIInterface) rmiClients.get(key).lookup(SlaveClient.REGISTRY_NAME);
+						if (loadgen.getStatus() != Thread.State.TERMINATED) {
+							res = loadgen.getCurrentStats();
+							if (res != null && !res.isEmpty())
+								Measurements.getMeasurements().add(res);
 							alldone = false;
 						}
 					} catch (NotBoundException e) {
@@ -99,7 +95,7 @@ public class StatusThread extends Thread {
 		} while (!alldone);
 		
 		try {
-			exportMeasurements(proppkg.props, en - st);
+			exportMeasurements(props, en - st);
 		} catch (IOException e) {
 			System.err.println("Could not export measurements, error: "+ e.getMessage());
 			e.printStackTrace();

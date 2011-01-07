@@ -9,41 +9,39 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.Properties;
 
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.OneMeasurement;
-import com.yahoo.ycsb.rmi.PropertyPackage;
-import com.yahoo.ycsb.rmi.RMIInterface;
+import com.yahoo.ycsb.rmi.SlaveRMIInterface;
 
-public class SlaveClient implements RMIInterface, ClientStatus {
-	public static final String REGISTRY_NAME = "LoadGeneratorRMIInterface"; 
+public class SlaveClient implements SlaveRMIInterface {
+	public static final String REGISTRY_NAME = "SlaveRMIInterface";
+	public static final int RMI_PORT = 1098;
 	private static SlaveClient client = null;
 	
-	private int status;
 	private LoadThread lt;
-	private PropertyPackage proppkg;
+	private Properties props;
 	private Registry registry;
 
 	private SlaveClient() {
-		status = NOT_STARTED;
 		lt = null;
+		props = null;
 		
 		try {
-            RMIInterface stub = (RMIInterface) UnicastRemoteObject.exportObject(this, 0);
-            LocateRegistry.createRegistry(1099);
+            SlaveRMIInterface stub = (SlaveRMIInterface) UnicastRemoteObject.exportObject(this, 0);
+            LocateRegistry.createRegistry(RMI_PORT);
             registry = LocateRegistry.getRegistry();
             registry.rebind(REGISTRY_NAME, stub);
         } catch (Exception e) {
-            System.err.println("ComputeEngine exception:");
+            System.err.println("SlaveRMI exception:");
             e.printStackTrace();
         }
 	}
 	
 	public static SlaveClient getSlaveClient() {
-		if (client == null) {
+		if (client == null)
 			client = new SlaveClient();
-			return client;
-		}
 		return client;
 	}
 	
@@ -58,35 +56,33 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 	}
 	
 	@Override
-	public int setProperties(PropertyPackage proppkg) {
-		if (proppkg == null)
+	public int setProperties(Properties props) {
+		if (props == null)
 			return -1;
-		client.proppkg = proppkg;
-		client.status = READY;
+		this.props = props;
 		return 0;
 	}
 	
 	@Override
 	public int execute() {
-		if (client.proppkg == null)
+		if (props == null)
 			return -2;
+		System.out.println(props.toString());
 		if (lt == null || lt.getState() == Thread.State.TERMINATED) {
-			lt = new LoadThread(proppkg, true);
+			lt = new LoadThread(props);
 		} else {
 			return -1;
 		}
-		status = RUNNING;
 		lt.start();
 		return 0;
 	}
 
 	@Override
-	public int getStatus() {
-		return client.status;
-	}
-	
-	public void setStatus(int status) {
-		client.status = status;
+	public Thread.State getStatus() {
+		if (lt == null)
+			return null;
+		else
+			return lt.getState();
 	}
 	
 	public void shutdown() {
@@ -113,6 +109,7 @@ public class SlaveClient implements RMIInterface, ClientStatus {
 		}
 		
 		SlaveClient client = getSlaveClient();
+		
 	}
 }
 

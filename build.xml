@@ -48,8 +48,13 @@
    	<target name="dbcompile-membase" depends="compile">
    			<property name="db.dir" value="db/membase"/>
    			<antcall target="dbcompile"/>
-   		</target>
+   	</target>
 	
+   	<target name="dbcompile-memcached" depends="compile">
+   	   			<property name="db.dir" value="db/memcached"/>
+   	   			<antcall target="dbcompile"/>
+   	</target>
+   	
  	<target name="compile">
         <mkdir dir="${classes.dir}"/>
         <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="build.classpath" deprecation="on" includeantruntime="false">
@@ -97,7 +102,6 @@
 	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
 		 <arg value="com.yahoo.ycsb.LoadGenerator" />
 		 <arg value="-load" />
-	  	 <arg value="-s" />
 	  	 <arg value="-db" />
 	  	 <arg value="com.yahoo.ycsb.db.SpymemcachedClient" />
 		 <arg value="-P" />
@@ -131,6 +135,24 @@
 		<arg value="com.yahoo.ycsb.client.SlaveClient" />
 	  </exec>
     </target>
+   	
+   	<target name="control">
+   		  <exec executable="java" >
+   		  	<arg value="-Djava.security.policy=server.policy" />
+   		  	<arg value="-Xms128m" />
+   		  	<arg value="-Xmx256m" />
+   	   		<arg value="-cp" />
+   		  	<arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
+   			<arg value="com.yahoo.ycsb.client.ControlClient" />
+   		  	<arg value="incitems" />
+   		  	<arg value="-s" />
+   		  	<arg value="20000" />
+   		  	<arg value="-t" />
+   		  	<arg value="3600" />
+   		  	<arg value="-c" />
+   		  	<arg value="1000" />
+   		  </exec>
+   	    </target>
    		
 
 </project>

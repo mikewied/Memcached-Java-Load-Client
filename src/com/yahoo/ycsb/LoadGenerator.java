@@ -7,7 +7,7 @@ import java.util.Properties;
 
 import com.yahoo.ycsb.client.Client;
 import com.yahoo.ycsb.client.MasterClient;
-import com.yahoo.ycsb.rmi.PropertyPackage;
+import com.yahoo.ycsb.rmi.LoadProperties;
 
 public class LoadGenerator {
 
@@ -18,7 +18,6 @@ public class LoadGenerator {
 		boolean dotransactions = true;
 		int threadcount = 1;
 		int target = 0;
-		boolean slave = false;
 		String label = "";
 		int argindex = 0;
 
@@ -45,9 +44,6 @@ public class LoadGenerator {
 				argindex++;
 			} else if (args[argindex].compareTo("-t") == 0) {
 				dotransactions = true;
-				argindex++;
-			} else if (args[argindex].compareTo("-slave") == 0) {
-				slave = true;
 				argindex++;
 			} else if (args[argindex].compareTo("-db") == 0) {
 				argindex++;
@@ -107,6 +103,11 @@ public class LoadGenerator {
 			System.exit(0);
 		}
 		
+		props.setProperty(LoadProperties.DO_TRANSACTIONS, Boolean.toString(dotransactions));
+		props.setProperty(LoadProperties.LABEL, label);
+		props.setProperty(LoadProperties.TARGET, Integer.toString(target));
+		
+		
 		// overwrite file properties with properties from the command line
 
 		// Issue #5 - remove call to stringPropertyNames to make compilable
@@ -119,9 +120,13 @@ public class LoadGenerator {
 
 		props = fileprops;
 		
-		MasterClient client = new MasterClient(new PropertyPackage(props, dotransactions, threadcount, target, slave, label));
+		
+		MasterClient client = MasterClient.getMasterClient();
+		client.init(props);
 		client.setupSlaves();
 		client.execute();
+		client.shutdownSlaves();
+		client.shutdownMaster();
 	}
 	
 	public static void checkMoreArgs(int argindex, int argslength) {

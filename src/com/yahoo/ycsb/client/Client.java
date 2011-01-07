@@ -17,18 +17,15 @@
 
 package com.yahoo.ycsb.client;
 
-import com.yahoo.ycsb.rmi.PropertyPackage;
+import java.util.Properties;
 
 //import org.apache.log4j.BasicConfigurator;
 
 /**
  * Main class for executing YCSB.
  */
-public abstract class Client {
-	
-	
-	
-	protected static final int MAX_LOAD_THREADS = 5;
+public class Client {
+	public static Client client = null;
 	public static final String OPERATION_COUNT_PROPERTY = "operationcount";
 	public static final String RECORD_COUNT_PROPERTY = "recordcount";
 	public static final String WORKLOAD_PROPERTY = "workload";
@@ -38,14 +35,15 @@ public abstract class Client {
 	public static final String PRINT_STATS_INTERVAL_DEFAULT = "5";
 	
 	int status;
-	PropertyPackage proppkg;
+	Properties props;
 	
-	public Client(PropertyPackage proppkg) {
-		this.proppkg = proppkg;
+	protected Client(Properties props) {
+		this.props = null;
 	}
-
-	public abstract void execute();
 	
-	
-	
+	public Client getClient() {
+		if (client == null)
+			client = new Client(null);
+		return client;
+	}
 }
