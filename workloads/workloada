@@ -26,7 +26,7 @@ db=com.yahoo.ycsb.db.SpymemcachedClient
 memcached.address=10.1.5.102
 recordcount=10
 operationcount=10
-workload=com.yahoo.ycsb.workloads.CoreWorkload
+workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
 readallfields=true
 

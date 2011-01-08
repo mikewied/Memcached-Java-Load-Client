@@ -26,6 +26,7 @@ public class LoadGenerator {
 			System.exit(0);
 		}
 
+		props.setProperty("threadcount", threadcount + "");
 		while (args[argindex].startsWith("-")) {
 			if (args[argindex].compareTo("-threads") == 0) {
 				argindex++;

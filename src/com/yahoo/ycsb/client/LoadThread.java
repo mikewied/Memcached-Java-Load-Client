@@ -52,7 +52,7 @@ public class LoadThread extends Thread {
 		String dbname = props.getProperty(LoadProperties.DB_NAME);
 		boolean dotransactions = Boolean.parseBoolean(props.getProperty(LoadProperties.DO_TRANSACTIONS));
 		int opcount = Integer.parseInt(props.getProperty(LoadProperties.OP_COUNT));
-		int threadcount = Integer.parseInt(props.getProperty(LoadProperties.THREAD_COUNT));
+		int threadcount = Integer.parseInt((String)props.getProperty(LoadProperties.THREAD_COUNT));
 		int target = Integer.parseInt(props.getProperty(LoadProperties.TARGET));
 		String protocol = props.getProperty(Client.PROTOCOL_PROPERTY);
 
@@ -87,7 +87,7 @@ public class LoadThread extends Thread {
 		for (int threadid = 0; threadid < threadcount; threadid++) {
 			DataStore db = null;
 			try {
-				if (protocol.equals("memcached"))
+				if (workloadloc.equals("com.yahoo.ycsb.workloads.MemcachedCoreWorkload"))
 					db = MemcachedFactory.newMemcached(dbname, props);
 				else if (protocol.equals("db"))
 					db = DBFactory.newDB(dbname, props);
