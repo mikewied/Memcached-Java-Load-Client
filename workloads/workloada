@@ -23,7 +23,7 @@
 #   Request distribution: zipfian
 
 db=com.yahoo.ycsb.db.SpymemcachedClient
-memcached.address=10.1.5.102
+memcached.address=10.2.1.11
 recordcount=10
 operationcount=10
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload

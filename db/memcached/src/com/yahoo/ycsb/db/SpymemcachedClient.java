@@ -53,7 +53,7 @@ public class SpymemcachedClient extends Memcached {
 		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
 		membaseport = Integer.parseInt(getProperties().getProperty(MEMBASE_PORT, MEMBASE_PORT_DEFAULT));
 
-		String addr = "10.2.1.11";//getProperties().getProperty("memcached.address");
+		String addr = getProperties().getProperty("memcached.address");
 		
 		try {
 			InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), membaseport);
