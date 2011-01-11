@@ -26,7 +26,7 @@ public class LoadGenerator {
 			System.exit(0);
 		}
 
-		props.setProperty("threadcount", threadcount + "");
+		
 		while (args[argindex].startsWith("-")) {
 			if (args[argindex].compareTo("-threads") == 0) {
 				argindex++;
@@ -104,9 +104,8 @@ public class LoadGenerator {
 			System.exit(0);
 		}
 		
-		props.setProperty(LoadProperties.DO_TRANSACTIONS, Boolean.toString(dotransactions));
-		props.setProperty(LoadProperties.LABEL, label);
-		props.setProperty(LoadProperties.TARGET, Integer.toString(target));
+		
+		
 		
 		
 		// overwrite file properties with properties from the command line
@@ -118,9 +117,17 @@ public class LoadGenerator {
 
 			fileprops.setProperty(prop, props.getProperty(prop));
 		}
-
+		
 		props = fileprops;
 		
+		if (!props.containsKey(LoadProperties.THREAD_COUNT))
+			props.setProperty(LoadProperties.THREAD_COUNT, Integer.toString(threadcount));
+		if (!props.containsKey(LoadProperties.DO_TRANSACTIONS))
+			props.setProperty(LoadProperties.DO_TRANSACTIONS, Boolean.toString(dotransactions));
+		if (!props.containsKey(LoadProperties.TARGET))
+			props.setProperty(LoadProperties.TARGET, Integer.toString(target));
+		if (!props.containsKey(LoadProperties.LABEL))
+			props.setProperty(LoadProperties.LABEL, label);
 		
 		MasterClient client = MasterClient.getMasterClient();
 		client.init(props);

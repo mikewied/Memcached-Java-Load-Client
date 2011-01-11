@@ -25,7 +25,7 @@
 db=com.yahoo.ycsb.db.SpymemcachedClient
 memcached.address=10.2.1.11
 recordcount=20000
-operationcount=10000
+operationcount=1000000
 workload=com.yahoo.ycsb.workloads.MemcachedCoreWorkload
 
 readallfields=true
@@ -37,3 +37,4 @@ insertproportion=0
 
 requestdistribution=zipfian
 
+threadcount=16

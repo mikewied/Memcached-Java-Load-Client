@@ -37,7 +37,7 @@ public class LoadProperties implements Serializable {
 		
 		Set<String> pset = props.stringPropertyNames();
 		Iterator<String> itr = pset.iterator();
-		
+		System.out.println(props.toString());
 		while (itr.hasNext()) {
 			String key = itr.next();
 			String value = (String)props.get(key);
