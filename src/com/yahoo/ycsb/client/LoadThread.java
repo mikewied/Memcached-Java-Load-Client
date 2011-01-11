@@ -54,6 +54,7 @@ public class LoadThread extends Thread {
 		int opcount = Integer.parseInt(props.getProperty(LoadProperties.OP_COUNT));
 		int threadcount = Integer.parseInt((String)props.getProperty(LoadProperties.THREAD_COUNT));
 		int target = Integer.parseInt(props.getProperty(LoadProperties.TARGET));
+		int recordcount = Integer.parseInt(props.getProperty(LoadProperties.RECORD_COUNT));
 		String protocol = props.getProperty(Client.PROTOCOL_PROPERTY);
 
 		// compute the target throughput
@@ -99,7 +100,11 @@ public class LoadThread extends Thread {
 				System.out.println("Unknown DB " + dbname);
 				System.exit(0);
 			}
-			Thread t = new ClientThread(db, dotransactions, workload, threadid, threadcount, props, opcount / threadcount, targetperthreadperms);
+			Thread t;
+			if (dotransactions)
+				t = new ClientThread(db, dotransactions, workload, threadid, threadcount, props, opcount / threadcount, targetperthreadperms);
+			else
+				t = new ClientThread(db, dotransactions, workload, threadid, threadcount, props, recordcount / threadcount, targetperthreadperms);
 			threads.add(t);
 		}
 	}

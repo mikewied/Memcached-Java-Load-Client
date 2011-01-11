@@ -134,7 +134,6 @@ public class ClientThread extends Thread {
 				}
 			} else {
 				long st = System.currentTimeMillis();
-
 				while ((_opcount == 0) || (_opsdone < _opcount)) {
 
 					if (!_workload.doInsert(_db, _workloadstate)) {
