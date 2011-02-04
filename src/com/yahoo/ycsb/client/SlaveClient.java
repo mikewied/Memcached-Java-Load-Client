@@ -9,8 +9,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.Properties;
 
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.rmi.SlaveRMIInterface;
@@ -21,12 +21,10 @@ public class SlaveClient implements SlaveRMIInterface {
 	private static SlaveClient client = null;
 	
 	private LoadThread lt;
-	private Properties props;
 	private Registry registry;
 
 	private SlaveClient() {
 		lt = null;
-		props = null;
 		
 		try {
             SlaveRMIInterface stub = (SlaveRMIInterface) UnicastRemoteObject.exportObject(this, 0);
@@ -56,20 +54,17 @@ public class SlaveClient implements SlaveRMIInterface {
 	}
 	
 	@Override
-	public int setProperties(Properties props) {
-		if (props == null)
+	public int setProperties(Config c) {
+		if (c == null)
 			return -1;
-		this.props = props;
+		Config.setConfig(c);
 		return 0;
 	}
 	
 	@Override
 	public int execute() {
-		if (props == null)
-			return -2;
-		System.out.println(props.toString());
 		if (lt == null || lt.getState() == Thread.State.TERMINATED) {
-			lt = new LoadThread(props);
+			lt = new LoadThread();
 		} else {
 			return -1;
 		}

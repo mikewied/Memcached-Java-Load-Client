@@ -99,7 +99,7 @@
    <target name="load">
 	  <exec executable="java" >
 	     <arg value="-cp" />
-	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
+	  	 <arg value="build/ycsb.jar:lib/*" />
 		 <arg value="com.yahoo.ycsb.LoadGenerator" />
 		 <arg value="-load" />
 	  	 <arg value="-db" />
@@ -115,7 +115,7 @@
 	  	 <arg value="-Xms128m" />
 	  	 <arg value="-Xmx256m" />
 	     <arg value="-cp" />
-	  	 <arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar:build/classes/com/yahoo/ycsb/rmi/" />
+	  	 <arg value="build/ycsb.jar:lib/*" />
 		 <arg value="com.yahoo.ycsb.LoadGenerator" />
 		 <arg value="-t" />
 	  	 <arg value="-db" />
@@ -131,7 +131,7 @@
 	  	<arg value="-Xms128m" />
 	  	<arg value="-Xmx256m" />
    		<arg value="-cp" />
-	  	<arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
+	  	<arg value="build/ycsb.jar:lib/*" />
 		<arg value="com.yahoo.ycsb.client.SlaveClient" />
 	  </exec>
     </target>
@@ -142,7 +142,7 @@
    		  	<arg value="-Xms128m" />
    		  	<arg value="-Xmx256m" />
    	   		<arg value="-cp" />
-   		  	<arg value="build/ycsb.jar:lib/memcached-2.5-14-g3b3b3c8.jar" />
+   		  	<arg value="build/ycsb.jar:lib/*" />
    			<arg value="com.yahoo.ycsb.client.ControlClient" />
    		  	<arg value="incitems" />
    		  	<arg value="-s" />

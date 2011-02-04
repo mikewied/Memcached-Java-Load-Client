@@ -3,33 +3,22 @@ package com.yahoo.ycsb.measurements;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
-import com.yahoo.ycsb.client.Client;
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 public class Measurements {
 	private static final long serialVersionUID = -311232927139188477L;
 
-	private static final String MEASUREMENT_TYPE = "measurementtype";
-
-	private static final String MEASUREMENT_TYPE_DEFAULT = "histogram";
-
 	static Measurements measurements = null;
-
-	static Properties measurementproperties = null;
-
-	public static void setProperties(Properties props) {
-		measurementproperties = props;
-	}
 
 	/**
 	 * Return the singleton Measurements object.
 	 */
 	public synchronized static Measurements getMeasurements() {
 		if (measurements == null)
-			measurements = new Measurements(measurementproperties);
+			measurements = new Measurements();
 		return measurements;
 	}
 
@@ -39,20 +28,16 @@ public class Measurements {
 	HashMap<String, OneMeasurement> partialdata;
 	boolean histogram = true;
 
-	private Properties _props;
-
 	/**
 	 * Create a new object with the specified properties.
 	 */
-	public Measurements(Properties props) {
+	public Measurements() {
 		totaldata = new HashMap<String, OneMeasurement>();
 		partialdata = new HashMap<String, OneMeasurement>();
 
-		_props = props;
 		operations = 0;
 
-		if (_props.getProperty(MEASUREMENT_TYPE, MEASUREMENT_TYPE_DEFAULT)
-				.compareTo("histogram") == 0) {
+		if (Config.getConfig().measurement_type.compareTo("histogram") == 0) {
 			histogram = true;
 		} else {
 			histogram = false;
@@ -61,9 +46,9 @@ public class Measurements {
 
 	OneMeasurement constructOneMeasurement(String name) {
 		if (histogram) {
-			return new OneMeasurementHistogram(name, _props);
+			return new OneMeasurementHistogram(name);
 		} else {
-			return new OneMeasurementTimeSeries(name, _props);
+			return new OneMeasurementTimeSeries(name);
 		}
 	}
 
@@ -166,7 +151,7 @@ public class Measurements {
 	 * Return a one line summary of the measurements.
 	 */
 	public synchronized String getSummary() {
-		int interval = Integer.parseInt(_props.getProperty(Client.PRINT_STATS_INTERVAL, Client.PRINT_STATS_INTERVAL_DEFAULT));
+		int interval = Config.getConfig().print_stats_interval;
 		
 		String ret = " " + operations + " operations; " + (partialoperations / interval) + " ops/sec";
 		for (OneMeasurement m : partialdata.values()) {

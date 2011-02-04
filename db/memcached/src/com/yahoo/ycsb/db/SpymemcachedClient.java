@@ -5,33 +5,18 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import net.spy.memcached.CASResponse;
-import net.spy.memcached.CachedData;
 import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.ops.GetOperation;
-import net.spy.memcached.ops.Operation;
-import net.spy.memcached.ops.OperationStatus;
-import net.spy.memcached.transcoders.Transcoder;
 
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.memcached.Memcached;
 
 
 public class SpymemcachedClient extends Memcached {
 	MemcachedClient client;
-	public static final String VERBOSE = "memcached.verbose";
-	public static final String VERBOSE_DEFAULT = "true";
-
-	public static final String SIMULATE_DELAY = "memcached.simulatedelay";
-	public static final String SIMULATE_DELAY_DEFAULT = "0";
-	
-	public static final String MEMBASE_PORT = "membase.port";
-	public static final String MEMBASE_PORT_DEFAULT = "11211";
-	int membaseport;
 	
 	public static long endtime;
 	
@@ -49,11 +34,8 @@ public class SpymemcachedClient extends Memcached {
 	 * one DB instance per client thread.
 	 */
 	public void init() {
-		verbose = Boolean.parseBoolean(getProperties().getProperty(VERBOSE, VERBOSE_DEFAULT));
-		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
-		membaseport = Integer.parseInt(getProperties().getProperty(MEMBASE_PORT, MEMBASE_PORT_DEFAULT));
-
-		String addr = getProperties().getProperty("memcached.address");
+		int membaseport = Config.getConfig().memcached_port;
+		String addr = Config.getConfig().memcached_address;
 		
 		try {
 			InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), membaseport);
@@ -73,9 +55,10 @@ public class SpymemcachedClient extends Memcached {
 	@Override
 	public int add(String key, Object value) {
 		try {
-			if (!client.add(key, 0, value).get().booleanValue())
+			if (!client.add(key, 0, value).get().booleanValue()) {
 				System.out.println("ADD: error getting data");
 				return -1;
+			}
 		} catch (InterruptedException e) {
 			System.out.println("ADD Interrupted");
 		} catch (ExecutionException e) {
@@ -88,6 +71,7 @@ public class SpymemcachedClient extends Memcached {
 	
 	@Override
 	public int get(String key, Object value) {
+		long st = System.currentTimeMillis();
 		Future<Object> f = client.asyncGet(key);
 		//long time = System.nanoTime();
 		try {
@@ -102,7 +86,7 @@ public class SpymemcachedClient extends Memcached {
 			e.printStackTrace();
 			return -2;
 		} catch (RuntimeException e) {
-			System.out.println("GET Runtime");
+			System.out.println("GET Runtime: " + (System.currentTimeMillis() - st));
 			return -3;
 		}
 		//System.out.println("Start: " + time);
@@ -148,9 +132,10 @@ public class SpymemcachedClient extends Memcached {
 	@Override
 	public int set(String key, Object value) {
 		try {
-			if (!client.set(key, 0, value).get().booleanValue())
+			if (!client.set(key, 0, value).get().booleanValue()) {
 				System.out.println("SET: error getting data");
 				return -1;
+			}
 		} catch (InterruptedException e) {
 			System.out.println("SET Interrupted");
 		} catch (ExecutionException e) {
@@ -256,5 +241,10 @@ public class SpymemcachedClient extends Memcached {
 	public static void main(String args[]) {
 		SpymemcachedClient client = new SpymemcachedClient();
 		client.init();
+	}
+
+	@Override
+	public int update(String key, Object value) {
+		return set(key, value);
 	}
 }

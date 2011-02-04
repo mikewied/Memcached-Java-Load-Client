@@ -8,14 +8,13 @@ import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.OneMeasurement;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
-import com.yahoo.ycsb.rmi.LoadProperties;
 import com.yahoo.ycsb.rmi.SlaveRMIInterface;
 
 /**
@@ -26,18 +25,16 @@ import com.yahoo.ycsb.rmi.SlaveRMIInterface;
  * 
  */
 public class StatusThread extends Thread {
-	Properties props;
 	HashMap<String, Registry> rmiClients;
 	LoadThread lt;
 	String _label;
 	boolean _standardstatus;
 	long _printstatsinterval;
 
-	public StatusThread(LoadThread lt, HashMap<String, Registry> rmiClients, Properties props) {
+	public StatusThread(LoadThread lt, HashMap<String, Registry> rmiClients) {
 		this.rmiClients = rmiClients;
-		this.props = props;
 		this.lt = lt;
-		_label = props.getProperty(LoadProperties.LABEL);
+		_label = Config.getConfig().label;
 		_printstatsinterval = 5;
 	}
 
@@ -95,7 +92,7 @@ public class StatusThread extends Thread {
 		} while (!alldone);
 		
 		try {
-			exportMeasurements(props, en - st);
+			exportMeasurements(en - st);
 		} catch (IOException e) {
 			System.err.println("Could not export measurements, error: "+ e.getMessage());
 			e.printStackTrace();
@@ -116,12 +113,12 @@ public class StatusThread extends Thread {
 	 *             Either failed to write to output stream or failed to close
 	 *             it.
 	 */
-	private void exportMeasurements(Properties props, long runtime) throws IOException {
+	private void exportMeasurements(long runtime) throws IOException {
 		MeasurementsExporter exporter = null;
 		try {
 			// if no destination file is provided the results will be written to stdout
 			OutputStream out;
-			String exportFile = props.getProperty("exportfile");
+			String exportFile = Config.getConfig().export_file;
 			long opcount = Measurements.getMeasurements().getOperations();
 			if (exportFile == null) {
 				out = System.out;
@@ -130,10 +127,9 @@ public class StatusThread extends Thread {
 			}
 
 			// if no exporter is provided the default text one will be used
-			String exporterStr = props.getProperty("exporter", "com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
+			String exporterStr = Config.getConfig().exporter;
 			try {
-				exporter = (MeasurementsExporter) Class.forName(exporterStr)
-						.getConstructor(OutputStream.class).newInstance(out);
+				exporter = (MeasurementsExporter) Class.forName(exporterStr).getConstructor(OutputStream.class).newInstance(out);
 			} catch (Exception e) {
 				System.err.println("Could not find exporter " + exporterStr + ", will use default text reporter.");
 				e.printStackTrace();

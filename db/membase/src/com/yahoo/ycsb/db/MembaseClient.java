@@ -241,4 +241,9 @@ public class MembaseClient extends Memcached {
 		SpymemcachedClient client = new SpymemcachedClient();
 		client.init();
 	}
+
+	@Override
+	public int update(String key, Object value) {
+		return set(key, value);
+	}
 }

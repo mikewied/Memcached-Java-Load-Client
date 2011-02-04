@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.Vector;
 
 import com.yahoo.ycsb.database.DB;
-import com.yahoo.ycsb.workloads.*;
 
 /**
  * A simple command line client to a database, using the appropriate
@@ -49,7 +48,7 @@ public class CommandLine {
 				.println("  -db classname: Use a specified DB class (can also set the \"db\" property)");
 		System.out
 				.println("  -table tablename: Use the table name instead of the default \""
-						+ DBCoreWorkload.TABLENAME_PROPERTY_DEFAULT + "\"");
+						+ Config.getConfig().table_name + "\"");
 		System.out.println();
 	}
 
@@ -74,7 +73,7 @@ public class CommandLine {
 
 		Properties props = new Properties();
 		Properties fileprops = new Properties();
-		String table = DBCoreWorkload.TABLENAME_PROPERTY_DEFAULT;
+		String table = Config.getConfig().table_name;
 
 		while ((argindex < args.length) && (args[argindex].startsWith("-"))) {
 			if ((args[argindex].compareTo("-help") == 0)

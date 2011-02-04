@@ -179,5 +179,7 @@ public abstract class Memcached extends DataStore{
 	 *         description for a discussion of error codes.
 	 */
 	public abstract int set(String key, Object value);
+	
+	public abstract int update(String key, Object value);
 
 }

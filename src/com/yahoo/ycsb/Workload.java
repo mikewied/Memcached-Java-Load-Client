@@ -17,8 +17,6 @@
 
 package com.yahoo.ycsb;
 
-import java.util.Properties;
-
 /**
  * One experiment scenario. One object of this type will be instantiated and
  * shared among all client threads. This class should be constructed using a
@@ -35,16 +33,13 @@ import java.util.Properties;
  * insertcount=500000.
  */
 public abstract class Workload {
-	public static final String INSERT_START_PROPERTY = "insertstart";
-
-	public static final String INSERT_START_PROPERTY_DEFAULT = "0";
 
 	/**
 	 * Initialize the scenario. Create any generators and other shared objects
 	 * here. Called once, in the main client thread, before any operations are
 	 * started.
 	 */
-	public void init(Properties p) throws WorkloadException {
+	public void init() throws WorkloadException {
 	}
 
 	/**
@@ -65,7 +60,7 @@ public abstract class Workload {
 	 *         traces from a file, return true when there are more to do, false
 	 *         when you are done.
 	 */
-	public Object initThread(Properties p, int mythreadid, int threadcount)
+	public Object initThread(int mythreadid, int threadcount)
 			throws WorkloadException {
 		return null;
 	}
@@ -86,7 +81,7 @@ public abstract class Workload {
 	 * mutations on threadstate. Mutations to threadstate do not need to be
 	 * synchronized, since each thread has its own threadstate instance.
 	 */
-	public abstract boolean doInsert(DataStore db, Object threadstate);
+	public abstract boolean doInsert(DataStore db);
 
 	/**
 	 * Do one transaction operation. Because it will be called concurrently from
@@ -103,5 +98,5 @@ public abstract class Workload {
 	 *         traces from a file, return true when there are more to do, false
 	 *         when you are done.
 	 */
-	public abstract boolean doTransaction(DataStore db, Object threadstate);
+	public abstract boolean doTransaction(DataStore db);
 }

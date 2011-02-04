@@ -270,5 +270,14 @@ public class MemcachedWrapper extends Memcached {
 		_measurements.reportReturnCode("SET", res);
 		return res;
 	}
+	
+	public int update(String key, Object value) {
+		long st = System.nanoTime();
+		int res = _db.set(key, value);
+		long en = System.nanoTime();
+		_measurements.measure("UPDATE", (int) ((en - st) / 1000));
+		_measurements.reportReturnCode("UPDATE", res);
+		return res;
+	}
 
 }

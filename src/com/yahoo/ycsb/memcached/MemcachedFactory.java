@@ -17,8 +17,6 @@
 
 package com.yahoo.ycsb.memcached;
 
-import java.util.Properties;
-
 import com.yahoo.ycsb.UnknownDataStoreException;
 
 /**
@@ -26,8 +24,7 @@ import com.yahoo.ycsb.UnknownDataStoreException;
  */
 public class MemcachedFactory {
 	@SuppressWarnings("rawtypes")
-	public static Memcached newMemcached(String memcachedname, Properties properties)
-			throws UnknownDataStoreException {
+	public static Memcached newMemcached(String memcachedname) throws UnknownDataStoreException {
 		ClassLoader classLoader = MemcachedFactory.class.getClassLoader();
 
 		Memcached ret = null;
@@ -38,14 +35,16 @@ public class MemcachedFactory {
 
 			ret = (Memcached) memcachedclass.newInstance();
 		} catch (ClassCastException e) {
-			System.out.println("Cannot instantiate " + memcachedname + " with specified protocol");
-			System.exit(0); 
-		} catch (Exception e) {
+			throw new UnknownDataStoreException(e); 
+		} catch (ClassNotFoundException e) {
+			throw new UnknownDataStoreException(e);
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-		ret.setProperties(properties);
 
 		return new MemcachedWrapper(ret);
 	}

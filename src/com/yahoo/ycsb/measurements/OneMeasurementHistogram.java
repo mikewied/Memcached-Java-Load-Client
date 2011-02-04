@@ -20,9 +20,8 @@ package com.yahoo.ycsb.measurements;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Properties;
-import java.util.Set;
 
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 /**
@@ -34,10 +33,7 @@ import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
  */
 public class OneMeasurementHistogram extends OneMeasurement {
 	private static final long serialVersionUID = 8771477575164658300L;
-
-	public static final int BUCKETS = 20;
 	
-	Properties props;
 	int[] histogram;
 	int histogramoverflow;
 	int operations;
@@ -49,10 +45,9 @@ public class OneMeasurementHistogram extends OneMeasurement {
 	int max;
 	HashMap<Integer, int[]> returncodes;
 
-	public OneMeasurementHistogram(String name, Properties props) {
+	public OneMeasurementHistogram(String name) {
 		super(name);
-		this.props = props;
-		histogram = new int[BUCKETS];
+		histogram = new int[Config.getConfig().histogram_buckets];
 		histogramoverflow = 0;
 		operations = 0;
 		totallatency = 0;
@@ -84,10 +79,10 @@ public class OneMeasurementHistogram extends OneMeasurement {
 	 * @see com.yahoo.ycsb.OneMeasurement#measure(int)
 	 */
 	public synchronized void measure(int latency) {
-		if (((int)Math.pow(2.0, (double)(BUCKETS - 1)) < latency))
+		if (((int)Math.pow(2.0, (double)(Config.getConfig().histogram_buckets - 1)) < latency))
 			histogramoverflow++;
 		
-		for (int i = 0; i < BUCKETS - 1; i++) {
+		for (int i = 0; i < Config.getConfig().histogram_buckets - 1; i++) {
 			if (latency < Math.pow(2.0, (double)(i + exp_offset))) {
 				histogram[i]++;
 				break;
@@ -113,7 +108,7 @@ public class OneMeasurementHistogram extends OneMeasurement {
 	public synchronized void add(OneMeasurement m) {
 		operations += histogramoverflow;
 		totallatency += ((OneMeasurementHistogram)m).totallatency;
-		for (int i = 0; i < BUCKETS; i++) {
+		for (int i = 0; i < Config.getConfig().histogram_buckets; i++) {
 			this.histogram[i] += ((OneMeasurementHistogram)m).histogram[i];
 			this.operations += ((OneMeasurementHistogram)m).histogram[i];
 		}
@@ -151,7 +146,7 @@ public class OneMeasurementHistogram extends OneMeasurement {
 
 		String lower_bound;
 		String upper_bound;
-		for (int i = 0; i < BUCKETS; i++) {
+		for (int i = 0; i < Config.getConfig().histogram_buckets; i++) {
 			if (i == 0)
 				lower_bound = computeTime(0);
 			else
@@ -160,7 +155,7 @@ public class OneMeasurementHistogram extends OneMeasurement {
 			exporter.write(getName(), (lower_bound + " - " + upper_bound), histogram[i]);
 			
 		}
-		String overflowtime = computeTime((int)Math.pow(2.0, (double)((BUCKETS + exp_offset - 1))));
+		String overflowtime = computeTime((int)Math.pow(2.0, (double)((Config.getConfig().histogram_buckets + exp_offset - 1))));
 		exporter.write(getName(), ">" + overflowtime, histogramoverflow);
 	}
 	
@@ -178,7 +173,7 @@ public class OneMeasurementHistogram extends OneMeasurement {
 	public double getPercentile(int[] data, double percentile) {
 		int i;
 		int opcounter = 0;
-		for (i = 0; i < BUCKETS; i++) {
+		for (i = 0; i < Config.getConfig().histogram_buckets; i++) {
 			opcounter += data[i];
 			if (((double) opcounter) / ((double) operations) >= percentile) {
 				break;

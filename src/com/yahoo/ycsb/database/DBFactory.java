@@ -17,8 +17,6 @@
 
 package com.yahoo.ycsb.database;
 
-import java.util.Properties;
-
 import com.yahoo.ycsb.UnknownDataStoreException;
 
 /**
@@ -26,7 +24,7 @@ import com.yahoo.ycsb.UnknownDataStoreException;
  */
 public class DBFactory {
 	@SuppressWarnings("rawtypes")
-	public static DB newDB(String dbname, Properties properties)
+	public static DB newDB(String dbname)
 			throws UnknownDataStoreException {
 		ClassLoader classLoader = DBFactory.class.getClassLoader();
 
@@ -38,14 +36,16 @@ public class DBFactory {
 
 			ret = (DB) dbclass.newInstance();
 		} catch (ClassCastException e) {
-			System.out.println("Cannot instantiate " + dbname + " with specified protocol");
-			System.exit(0); 
-		} catch (Exception e) {
+			throw new UnknownDataStoreException(e); 
+		} catch (ClassNotFoundException e) {
+			throw new UnknownDataStoreException(e);
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return null;
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-		ret.setProperties(properties);
 
 		return new DBWrapper(ret);
 	}

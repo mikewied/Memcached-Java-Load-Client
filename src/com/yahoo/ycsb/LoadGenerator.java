@@ -5,14 +5,13 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import com.yahoo.ycsb.client.Client;
 import com.yahoo.ycsb.client.MasterClient;
-import com.yahoo.ycsb.rmi.LoadProperties;
 
 public class LoadGenerator {
 
 	@SuppressWarnings("rawtypes")
 	public static void main(String[] args) {
+		Config config = Config.getConfig();
 		Properties props = new Properties();
 		Properties fileprops = new Properties();
 		boolean dotransactions = true;
@@ -32,24 +31,24 @@ public class LoadGenerator {
 				argindex++;
 				checkMoreArgs(argindex, args.length);
 				int tcount = Integer.parseInt(args[argindex]);
-				props.setProperty("threadcount", tcount + "");
+				config.thread_count = tcount;
 				argindex++;
 			} else if (args[argindex].compareTo("-target") == 0) {
 				argindex++;
 				checkMoreArgs(argindex, args.length);
 				int ttarget = Integer.parseInt(args[argindex]);
-				props.setProperty("target", ttarget + "");
+				config.target = ttarget;
 				argindex++;
 			} else if (args[argindex].compareTo("-load") == 0) {
-				dotransactions = false;
+				config.do_transactions = false;
 				argindex++;
 			} else if (args[argindex].compareTo("-t") == 0) {
-				dotransactions = true;
+				config.do_transactions = true;
 				argindex++;
 			} else if (args[argindex].compareTo("-db") == 0) {
 				argindex++;
 				checkMoreArgs(argindex, args.length);
-				props.setProperty("db", args[argindex]);
+				config.db = args[argindex];
 				argindex++;
 			} else if (args[argindex].compareTo("-l") == 0) {
 				argindex++;
@@ -75,6 +74,7 @@ public class LoadGenerator {
 				for (Enumeration e = myfileprops.propertyNames(); e.hasMoreElements();) {
 					String prop = (String) e.nextElement();
 					fileprops.setProperty(prop, myfileprops.getProperty(prop));
+					config.setProperty(prop, myfileprops.getProperty(prop));
 				}
 			} else if (args[argindex].compareTo("-p") == 0) {
 				argindex++;
@@ -104,10 +104,6 @@ public class LoadGenerator {
 			System.exit(0);
 		}
 		
-		
-		
-		
-		
 		// overwrite file properties with properties from the command line
 
 		// Issue #5 - remove call to stringPropertyNames to make compilable
@@ -120,21 +116,11 @@ public class LoadGenerator {
 		
 		props = fileprops;
 		
-		if (!props.containsKey(LoadProperties.THREAD_COUNT))
-			props.setProperty(LoadProperties.THREAD_COUNT, Integer.toString(threadcount));
-		if (!props.containsKey(LoadProperties.DO_TRANSACTIONS))
-			props.setProperty(LoadProperties.DO_TRANSACTIONS, Boolean.toString(dotransactions));
-		if (!props.containsKey(LoadProperties.TARGET))
-			props.setProperty(LoadProperties.TARGET, Integer.toString(target));
-		if (!props.containsKey(LoadProperties.LABEL))
-			props.setProperty(LoadProperties.LABEL, label);
-		
 		MasterClient client = MasterClient.getMasterClient();
-		client.init(props);
+		client.init();
 		client.setupSlaves();
 		client.execute();
 		client.shutdownSlaves();
-		client.shutdownMaster();
 	}
 	
 	public static void checkMoreArgs(int argindex, int argslength) {
@@ -163,7 +149,7 @@ public class LoadGenerator {
 		System.out.println("  -l label:  use label for status (e.g. to label one experiment out of a whole batch)");
 		System.out.println("");
 		System.out.println("Required properties:");
-		System.out.println("  " + Client.WORKLOAD_PROPERTY + ": the name of the workload class to use (e.g. com.yahoo.ycsb.workloads.CoreWorkload)");
+		System.out.println("  " + Config.WORKLOAD_PROPERTY + ": the name of the workload class to use (e.g. com.yahoo.ycsb.workloads.CoreWorkload)");
 		System.out.println("");
 		System.out.println("To run the transaction phase from multiple servers, start a separate client on each.");
 		System.out.println("To run the load phase from multiple servers, start a separate client on each; additionally,");

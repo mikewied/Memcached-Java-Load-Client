@@ -1,28 +1,25 @@
 package com.yahoo.ycsb.client;
 
-import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.client.LoadThread;
-import com.yahoo.ycsb.rmi.LoadProperties;
 import com.yahoo.ycsb.rmi.MasterRMIInterface;
 import com.yahoo.ycsb.rmi.SlaveRMIInterface;
 
 public class MasterClient implements MasterRMIInterface {
-	public static final String REGISTRY_NAME = "MasterRMIInterface";
+	private static final Logger LOG = LoggerFactory.getLogger(MasterClient.class);
 	public static MasterClient client = null;
-	private static final int RMI_PORT = 1098;
-	private Registry registry;
 	
-	LoadProperties props;
 	LoadThread lt;
 	StatusThread st;
 	HashMap<String, Registry> rmiClients;
@@ -30,7 +27,6 @@ public class MasterClient implements MasterRMIInterface {
 	private MasterClient() {
 		lt = null;
 		st = null;
-		registry = null;
 		rmiClients = new HashMap<String, Registry>();
 	}
 	
@@ -40,30 +36,16 @@ public class MasterClient implements MasterRMIInterface {
 		return client;
 	}
 	
-	public void init(Properties p) {
-		//initRMI();
-		if (Boolean.parseBoolean((String) p.get("dotransactions")))
-			initSlaveRMI(p.getProperty("slaveaddress", null));
-		this.props = new LoadProperties(p, rmiClients.size() + 1);
+	public void init() {
+		if (Config.getConfig().do_transactions)
+			initSlaveRMI();
 	}
 	
-	private void initRMI() {
-		try {
-            MasterRMIInterface stub = (MasterRMIInterface) UnicastRemoteObject.exportObject(this, 0);
-            LocateRegistry.createRegistry(RMI_PORT);
-            registry = LocateRegistry.getRegistry();
-            registry.rebind(REGISTRY_NAME, stub);
-        } catch (Exception e) {
-            System.err.println("MasterRMI Interface Cannot be created");
-            System.exit(0);
-        }
-	}
-	
-	private void initSlaveRMI(String addresses) {
+	private void initSlaveRMI() {
 		String[] address;
 		
-		if (addresses != null) {
-			address = addresses.split(",");
+		if (Config.getConfig().slave_address != null) {
+			address = Config.getConfig().slave_address.split(",");
 			for (int i = 0; i < address.length; i++) {
 				try {
 		            Registry registry = LocateRegistry.getRegistry(address[i]);
@@ -71,9 +53,9 @@ public class MasterClient implements MasterRMIInterface {
 		            if (registry != null)
 		            	rmiClients.put(address[i], registry);
 		        } catch (RemoteException e) {
-		            System.err.println("Could not connect to slave client at " + address[i]);
+		            LOG.error("Could not connect to slave client at " + address[i]);
 		        } catch (NotBoundException e) {
-		        	System.err.println("Slave Client not bound at " + address[i]);
+		        	LOG.error("Slave Client not bound at " + address[i]);
 				}
 			}
 		}
@@ -88,14 +70,14 @@ public class MasterClient implements MasterRMIInterface {
 			String key = itr.next();
 			try {
 				SlaveRMIInterface loadgen = (SlaveRMIInterface) rmiClients.get(key).lookup(SlaveClient.REGISTRY_NAME);
-				res = loadgen.setProperties(props.getConfig(i));
+				res = loadgen.setProperties(Config.getConfig());
 				if (res != 0)
 					System.out.println("Properties sent to Slave were NULL");
 			} catch (NotBoundException e) {
-				System.out.println("Could not send properties to " + key + " because slave was not bound\nRemoving slave node from setup");
+				LOG.error("Could not send properties to " + key + " because slave was not bound\nRemoving slave node from setup");
 				rmiClients.remove(key);
 			}catch (RemoteException e) {
-				System.out.println("Could not send properties to " + key + " because slave is not running\nRemoving slave node from setup");
+				LOG.error("Could not send properties to " + key + " because slave is not running\nRemoving slave node from setup");
 				rmiClients.remove(key);
 			}
 		}
@@ -114,13 +96,13 @@ public class MasterClient implements MasterRMIInterface {
 				if (res != 0)
 					System.out.println("Error executing slave");
 			} catch (NotBoundException e) {
-				System.out.println("Could not run test with " + key + " because slave was not bound");
+				LOG.error("Could not run test with " + key + " because slave was not bound");
 			}catch (RemoteException e) {
-				System.out.println("Could not run test with " + key + " because slave is not running");
+				LOG.error("Could not run test with " + key + " because slave is not running");
 			}
 		}
-		lt = new LoadThread(props.getConfig(LoadProperties.MASTER_CONFIG));
-		st = new StatusThread(lt, rmiClients, props.getConfig(LoadProperties.MASTER_CONFIG));
+		lt = new LoadThread();
+		st = new StatusThread(lt, rmiClients);
 		st.start();
 		
 		try {
@@ -140,24 +122,9 @@ public class MasterClient implements MasterRMIInterface {
 				SlaveRMIInterface loadgen = (SlaveRMIInterface) rmiClients.get(key).lookup(SlaveClient.REGISTRY_NAME);
 				loadgen.shutdown();
 			} catch (NotBoundException e) {
-				System.out.println("Could not run test with " + key + " because slave was not bound");
+				LOG.error("Could not run test with " + key + " because slave was not bound");
 			}catch (RemoteException e) {
-				System.out.println("Could not run test with " + key + " because slave is not running");
-			}
-		}
-	}
-	
-	public void shutdownMaster() {
-		if (registry != null) {
-			try {
-				registry.unbind(REGISTRY_NAME);
-				UnicastRemoteObject.unexportObject(this, true);
-			} catch (AccessException e) {
-				e.printStackTrace();
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			} catch (NotBoundException e) {
-				e.printStackTrace();
+				LOG.error("Could not run test with " + key + " because slave is not running");
 			}
 		}
 	}

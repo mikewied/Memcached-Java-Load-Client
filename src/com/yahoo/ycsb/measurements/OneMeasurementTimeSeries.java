@@ -20,9 +20,9 @@ package com.yahoo.ycsb.measurements;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.Vector;
 
+import com.yahoo.ycsb.Config;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 class SeriesUnit {
@@ -49,9 +49,6 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
 	 * Granularity for time series; measurements will be averaged in chunks of
 	 * this granularity. Units are milliseconds.
 	 */
-	public static final String GRANULARITY = "timeseries.granularity";
-
-	public static final String GRANULARITY_DEFAULT = "1000";
 
 	int _granularity;
 	Vector<SeriesUnit> _measurements;
@@ -72,9 +69,9 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
 
 	private HashMap<Integer, int[]> returncodes;
 
-	public OneMeasurementTimeSeries(String name, Properties props) {
+	public OneMeasurementTimeSeries(String name) {
 		super(name);
-		_granularity = Integer.parseInt(props.getProperty(GRANULARITY, GRANULARITY_DEFAULT));
+		_granularity = Config.getConfig().timeseries_granularity;
 		_measurements = new Vector<SeriesUnit>();
 		returncodes = new HashMap<Integer, int[]>();
 	}
