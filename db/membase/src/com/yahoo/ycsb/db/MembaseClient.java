@@ -1,9 +1,11 @@
 package com.yahoo.ycsb.db;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -21,11 +23,16 @@ public class MembaseClient extends Memcached {
 
 	public static final String SIMULATE_DELAY = "memcached.simulatedelay";
 	public static final String SIMULATE_DELAY_DEFAULT = "0";
-	
-	public static final String MEMBASE_PORT = "membase.port";
-	public static final String MEMBASE_PORT_DEFAULT = "11211";
-	int membaseport;
-	
+
+	public static final String MEMCACHED_ADDRESS = "memcached.address";
+	public static final String MEMCACHED_ADDRESS_DEFAULT = "10.2.1.67";
+
+	public static final String MEMBASE_BUCKET = "membase.bucket";
+	public static final String MEMBASE_BUCKET_DEFAULT = "default";
+
+	public static final String MEMBASE_PASSWORD = "membase.password";
+	public static final String MEMBASE_PASSWORD_DEFAULT = "";
+
 	public static long endtime;
 	
 	Random random;
@@ -42,19 +49,22 @@ public class MembaseClient extends Memcached {
 	 * one DB instance per client thread.
 	 */
 	public void init() {
+		String address = getProperties().getProperty(MEMCACHED_ADDRESS, MEMCACHED_ADDRESS_DEFAULT);
+		String bucketName = getProperties().getProperty(MEMBASE_BUCKET, MEMBASE_BUCKET_DEFAULT);
+		String password = getProperties().getProperty(MEMBASE_PASSWORD, MEMBASE_PASSWORD_DEFAULT);
 		verbose = Boolean.parseBoolean(getProperties().getProperty(VERBOSE, VERBOSE_DEFAULT));
 		todelay = Integer.parseInt(getProperties().getProperty(SIMULATE_DELAY, SIMULATE_DELAY_DEFAULT));
-		membaseport = Integer.parseInt(getProperties().getProperty(MEMBASE_PORT, MEMBASE_PORT_DEFAULT));
 
-		String addr = "10.2.1.11";//getProperties().getProperty("memcached.address");
-		
 		try {
-			InetSocketAddress ia = new InetSocketAddress(InetAddress.getByAddress(ipv4AddressToByte(addr)), membaseport);
-			client = new MemcachedClient(ia);
+			List<URI> uris = new LinkedList<URI>();
+			uris.add(new URI("http://" + address + ":8091/pools"));
+			client = new MemcachedClient(uris, bucketName, password);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e1) {
 			e1.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -238,7 +248,7 @@ public class MembaseClient extends Memcached {
 	}
 	
 	public static void main(String args[]) {
-		SpymemcachedClient client = new SpymemcachedClient();
+		MembaseClient client = new MembaseClient();
 		client.init();
 	}
 
